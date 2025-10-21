@@ -13,7 +13,31 @@ export default function MapArtists({ artists, onSelect }: { artists: ArtistWithP
     if (!mapContainer.current || map.current) return
     const m = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://demotiles.maplibre.org/style.json',
+      style: {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles',
+            type: 'raster',
+            source: 'osm-tiles',
+            paint: {
+              'raster-brightness-min': 0.2,
+              'raster-brightness-max': 0.5,
+              'raster-contrast': 0.3,
+              'raster-saturation': -0.6,
+              'raster-opacity': 0.85
+            }
+          }
+        ]
+      },
       center: [-73.5673, 45.5017],
       zoom: 10,
     })
