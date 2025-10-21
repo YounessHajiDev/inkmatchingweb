@@ -1,12 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { fetchArtistsOnce } from '@/lib/publicProfiles'
 import ArtistCard from '@/components/ArtistCard'
 import type { ArtistWithProfile } from '@/types'
 import { AdjustmentsHorizontalIcon, FunnelIcon, MagnifyingGlassIcon, StarIcon } from '@heroicons/react/24/outline'
+import { useUserRole } from '@/hooks/useUserRole'
 
 export default function DiscoverPage() {
+  const router = useRouter()
+  const { role } = useUserRole()
   const [artists, setArtists] = useState<ArtistWithProfile[]>([])
   const [filteredArtists, setFilteredArtists] = useState<ArtistWithProfile[]>([])
   const [search, setSearch] = useState('')
@@ -18,6 +22,13 @@ export default function DiscoverPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [showFiltersModal, setShowFiltersModal] = useState(false)
   const [showSortModal, setShowSortModal] = useState(false)
+
+  // Redirect artists to their leads page
+  useEffect(() => {
+    if (role === 'artist') {
+      router.push('/leads')
+    }
+  }, [role, router])
 
   // Get unique cities and styles from artists
   const cities = useMemo(() => {

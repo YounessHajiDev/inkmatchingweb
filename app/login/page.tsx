@@ -44,7 +44,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Only auto-redirect if user is logged in and we're not in the middle of a form submission
-    if (user && !loading) router.push('/')
+    if (user && !loading) {
+      // Check role and redirect accordingly
+      getPublicProfile(user.uid).then(profile => {
+        if (profile?.role === 'artist') {
+          router.push('/leads')
+        } else {
+          router.push('/')
+        }
+      }).catch(() => router.push('/'))
+    }
   }, [user, router, loading])
 
   const title = useMemo(() => mode === 'signin' ? 'InkMatching' : 'Create your account', [mode])
