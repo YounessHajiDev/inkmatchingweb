@@ -13,6 +13,7 @@ export interface PublicProfile {
   city: string
   styles: string | string[]
   coverURL?: string
+  portfolioImages?: string[]
   latitude?: number
   longitude?: number
   lat?: number // legacy

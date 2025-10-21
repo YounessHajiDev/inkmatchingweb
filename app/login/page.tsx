@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth } from '@/lib/firebaseClient'
 import { useAuth } from '@/components/AuthProvider'
-import { saveMyPublicProfile } from '@/lib/publicProfiles'
+import { saveMyPublicProfile, getPublicProfile } from '@/lib/publicProfiles'
 import type { UserRole } from '@/types'
 
 type Mode = 'signin' | 'signup'
@@ -73,8 +73,14 @@ export default function LoginPage() {
     setLoading(true)
     try {
       if (mode === 'signin') {
-        await signInWithEmailAndPassword(auth, email, password)
-        router.push('/')
+        const credential = await signInWithEmailAndPassword(auth, email, password)
+        // Check user role and redirect accordingly
+        const profile = await getPublicProfile(credential.user.uid)
+        if (profile?.role === 'artist') {
+          router.push('/leads')
+        } else {
+          router.push('/')
+        }
         return
       }
 

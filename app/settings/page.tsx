@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, deleteUser } from 'firebase/auth'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { auth } from '@/lib/firebaseClient'
 import { useAuth } from '@/components/AuthProvider'
 import { getPublicProfile, saveMyPublicProfile } from '@/lib/publicProfiles'
+import { uploadStencil } from '@/lib/stencils'
 import type { PublicProfile } from '@/types'
+import Image from 'next/image'
 
 const appearanceOptions = ['system', 'dark', 'light'] as const
 
@@ -22,6 +24,8 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('')
   const [city, setCity] = useState('')
   const [styles, setStyles] = useState('')
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([])
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [schedule, setSchedule] = useState(3)
   const [locationPrecise, setLocationPrecise] = useState(false)
@@ -65,6 +69,7 @@ export default function SettingsPage() {
           setCity(p.city ?? '')
           const stylesStr = Array.isArray(p.styles) ? p.styles.join(', ') : (p.styles ?? '')
           setStyles(stylesStr)
+          setPortfolioImages(p.portfolioImages ?? [])
         }
       } catch (e) {
         console.error(e)
@@ -73,6 +78,29 @@ export default function SettingsPage() {
     load()
     return () => { cancelled = true }
   }, [user])
+
+  const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingPortfolio(true)
+    try {
+      await uploadStencil(user.uid, file)
+      // Get the uploaded URL (simplified - you may need to adjust based on your upload implementation)
+      const url = URL.createObjectURL(file)
+      setPortfolioImages([...portfolioImages, url])
+      setStatusMessage('Portfolio image uploaded')
+    } catch (err: any) {
+      console.error('Upload failed:', err)
+      setStatusMessage(err?.message || 'Upload failed')
+    } finally {
+      setUploadingPortfolio(false)
+      e.target.value = ''
+    }
+  }
+
+  const removePortfolioImage = (index: number) => {
+    setPortfolioImages(portfolioImages.filter((_, i) => i !== index))
+  }
 
   const saveProfile = async (makePublic?: boolean) => {
     if (!user) return
@@ -83,6 +111,7 @@ export default function SettingsPage() {
         displayName: displayName.trim() || user.email || 'Artist',
         city: city.trim(),
         styles: styles.split(',').map((s) => s.trim()).filter(Boolean),
+        portfolioImages: portfolioImages,
         isPublic: makePublic ?? (publicProfile === 'public'),
       }
       await saveMyPublicProfile(user.uid, input)
@@ -208,6 +237,35 @@ export default function SettingsPage() {
                 <label className="label">Styles (comma separated)</label>
                 <input className="input" value={styles} onChange={(e) => setStyles(e.target.value)} placeholder="Blackwork, Realism, Fine line" />
               </div>
+              
+              {/* Portfolio Images */}
+              {profile?.role === 'artist' && (
+                <div>
+                  <label className="label">Portfolio Images</label>
+                  <div className="space-y-3">
+                    {portfolioImages.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {portfolioImages.map((url, i) => (
+                          <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
+                            <Image src={url} alt={`Portfolio ${i + 1}`} fill className="object-cover" />
+                            <button
+                              onClick={() => removePortfolioImage(i)}
+                              className="absolute top-1 right-1 p-1 rounded-full bg-red-500/80 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <XMarkIcon className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <label className="btn btn-secondary cursor-pointer w-full">
+                      {uploadingPortfolio ? 'Uploading...' : '+ Add Portfolio Image'}
+                      <input type="file" accept="image/*" onChange={handlePortfolioUpload} className="hidden" disabled={uploadingPortfolio} />
+                    </label>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex gap-3 pt-1">
                 <button className="btn btn-secondary" onClick={() => setEditingProfile(false)}>Cancel</button>
                 <button className="btn btn-primary" onClick={() => saveProfile()}>Save</button>

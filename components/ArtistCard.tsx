@@ -39,6 +39,17 @@ export default function ArtistCard({ artist }: { artist: ArtistWithProfile }) {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </div>
 
+        {/* Portfolio Images */}
+        {artist.portfolioImages && artist.portfolioImages.length > 0 && (
+          <div className="grid grid-cols-4 gap-1">
+            {artist.portfolioImages.slice(0, 4).map((url, i) => (
+              <div key={i} className="relative aspect-square overflow-hidden rounded-lg border border-white/10">
+                <Image src={url} alt={`Work ${i + 1}`} fill className="object-cover transition duration-300 group-hover:scale-105" />
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
