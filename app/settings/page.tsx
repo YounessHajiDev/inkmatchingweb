@@ -112,6 +112,24 @@ export default function SettingsPage() {
         portfolioImages: portfolioImages,
         isPublic: makePublic ?? (publicProfile === 'public'),
       }
+
+      // Geocode the city to get coordinates
+      if (input.city && input.role === 'artist') {
+        try {
+          const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input.city)}&format=json&limit=1`
+          const response = await fetch(geocodeUrl, {
+            headers: { 'User-Agent': 'InkMatching/1.0' }
+          })
+          const results = await response.json()
+          if (results && results.length > 0) {
+            input.latitude = parseFloat(results[0].lat)
+            input.longitude = parseFloat(results[0].lon)
+          }
+        } catch (geoError) {
+          console.warn('Geocoding failed, profile saved without coordinates:', geoError)
+        }
+      }
+
       await saveMyPublicProfile(user.uid, input)
       setStatusMessage('Profile saved')
       setEditingProfile(false)
