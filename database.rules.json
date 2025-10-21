@@ -47,6 +47,7 @@
     "messages": {
       "$threadId": {
         ".read": "auth != null && root.child('threads').child($threadId).child('members').child(auth.uid).exists()",
+  ".write": "auth != null && newData.val() == null && root.child('threads').child($threadId).child('members').child(auth.uid).exists()",
         "$messageId": {
           ".write": "auth != null && newData.child('senderId').val() == auth.uid && (root.child('threads').child($threadId).child('members').child(auth.uid).exists() || newData.parent().parent().parent().child('threads').child($threadId).child('members').child(auth.uid).exists())",
           ".validate": "newData.hasChildren(['id','senderId','createdAt','kind'])",
