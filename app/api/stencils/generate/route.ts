@@ -39,11 +39,14 @@ export async function POST(req: NextRequest) {
     })
 
     if (!openaiResponse.ok) {
-      const error = await openaiResponse.json()
+      const error = await openaiResponse.json().catch(() => ({}))
       console.error('OpenAI API error:', error)
+      
+      // Provide more specific error messages
+      const errorMessage = error?.error?.message || 'Failed to generate image with AI'
       return NextResponse.json(
-        { message: 'Failed to generate image with AI' },
-        { status: 500 }
+        { message: errorMessage },
+        { status: openaiResponse.status }
       )
     }
 

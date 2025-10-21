@@ -58,9 +58,18 @@ export default function StencilsPage() {
       setUrls(await listStencils(user.uid))
       setShowAIModal(false)
       setAiPrompt('')
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI generation failed:', error)
-      alert('Failed to generate stencil. Please try again.')
+      const errorMessage = error?.message || 'Failed to generate stencil. Please try again.'
+      
+      // Show more helpful error message
+      if (errorMessage.includes('API key not configured')) {
+        alert('AI generation is not configured. Please contact the administrator.')
+      } else if (errorMessage.includes('quota')) {
+        alert('AI generation quota exceeded. Please try again later.')
+      } else {
+        alert(errorMessage)
+      }
     } finally {
       setGenerating(false)
     }
