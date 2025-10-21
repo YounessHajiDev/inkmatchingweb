@@ -84,9 +84,7 @@ export default function SettingsPage() {
     if (!file || !user) return
     setUploadingPortfolio(true)
     try {
-      await uploadStencil(user.uid, file)
-      // Get the uploaded URL (simplified - you may need to adjust based on your upload implementation)
-      const url = URL.createObjectURL(file)
+      const url = await uploadStencil(user.uid, file)
       setPortfolioImages([...portfolioImages, url])
       setStatusMessage('Portfolio image uploaded')
     } catch (err: any) {
