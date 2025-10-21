@@ -154,10 +154,10 @@ brew install --cask google-cloud-sdk  # macOS
 gcloud auth login
 
 # Apply CORS config (use cors.json from the repo root)
-gsutil cors set cors.json gs://your-project-id.appspot.com
+gsutil cors set cors.json gs://your-project-id.firebasestorage.app
 
 # Verify
-gsutil cors get gs://your-project-id.appspot.com
+gsutil cors get gs://your-project-id.firebasestorage.app
 ```
 
 **Set up Storage Rules** (use `storage.rules` from repo):
