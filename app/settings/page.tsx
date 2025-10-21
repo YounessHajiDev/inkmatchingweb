@@ -191,16 +191,18 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Public profile</h2>
-              <p className="text-sm text-ink-text-muted">Control your Discover visibility.</p>
+        {/* Only show public profile section for artists */}
+        {profile?.role === 'artist' && (
+          <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Public profile</h2>
+                <p className="text-sm text-ink-text-muted">Control your Discover visibility.</p>
+              </div>
+              <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${publicProfile === 'public' ? 'border-ink-accent/60 text-white' : 'border-white/15 text-ink-text-muted'}`}>
+                {publicProfile === 'public' ? 'Public' : 'Hidden'}
+              </span>
             </div>
-            <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${publicProfile === 'public' ? 'border-ink-accent/60 text-white' : 'border-white/15 text-ink-text-muted'}`}>
-              {publicProfile === 'public' ? 'Public' : 'Hidden'}
-            </span>
-          </div>
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setEditingProfile(true)}
@@ -271,6 +273,7 @@ export default function SettingsPage() {
             </div>
           )}
         </section>
+        )}
 
         <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">
           <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Notifications</h2>
