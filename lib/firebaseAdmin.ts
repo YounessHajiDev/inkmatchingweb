@@ -8,6 +8,16 @@ let app
 if (getApps().length === 0) {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   const hasServiceAccount = Boolean(serviceAccountJson)
+  const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+
+  if (!databaseURL) {
+    throw new Error(
+      'Missing NEXT_PUBLIC_FIREBASE_DATABASE_URL environment variable. ' +
+      'Please add it to your Vercel environment variables or .env.local file. ' +
+      'Format: https://your-project-default-rtdb.firebaseio.com'
+    )
+  }
 
   app = initializeApp({
     ...(hasServiceAccount
@@ -18,8 +28,8 @@ if (getApps().length === 0) {
       : {
           projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
         }),
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    databaseURL,
+    storageBucket,
   })
 } else {
   app = getApp()
