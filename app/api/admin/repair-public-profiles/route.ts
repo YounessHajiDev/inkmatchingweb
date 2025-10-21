@@ -12,12 +12,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     }
 
-    const usersSnap = await adminDb.ref('users').get()
+    const [usersSnap, profilesSnap] = await Promise.all([
+      adminDb.ref('users').get(),
+      adminDb.ref('publicProfiles').get(),
+    ])
     if (!usersSnap.exists()) {
       return NextResponse.json({ ok: false, error: 'no-users' }, { status: 404 })
     }
 
-    const users: Record<string, any> = usersSnap.val()
+  const users: Record<string, any> = usersSnap.val()
+  const existing: Record<string, any> = profilesSnap.exists() ? profilesSnap.val() : {}
     const updates: Record<string, any> = {}
     let created = 0
     let skipped = 0
@@ -36,9 +40,12 @@ export async function POST(req: Request) {
         coverURL: u.coverURL || '',
         isPublic: role === 'artist',
       }
-      // Write only if missing, to avoid overwriting any profile that may have been recreated already
-      updates[`publicProfiles/${uid}`] = baseProfile
-      created += 1
+      if (!existing[uid]) {
+        updates[`publicProfiles/${uid}`] = baseProfile
+        created += 1
+      } else {
+        skipped += 1
+      }
     })
 
     await adminDb.ref().update(updates)
