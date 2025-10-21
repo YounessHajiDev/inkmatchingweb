@@ -14,16 +14,30 @@ async function fetchProfile(uid: string): Promise<PublicProfile | null> {
 }
 
 async function ensureDefaultClientProfile(uid: string): Promise<PublicProfile> {
-  // Provision a minimal client profile if none exists so the user can message artists.
+  // Provision a minimal profile if none exists so the user can message artists.
   const existing = await fetchProfile(uid)
   if (existing) return existing
+
+  // Try to read intended role from private users/{uid}
+  let role: PublicProfile['role'] = 'client'
+  let displayName = 'Client'
+  try {
+    const uSnap = await get(ref(db, `users/${uid}`))
+    if (uSnap.exists()) {
+      const u: any = uSnap.val()
+      if (u?.role === 'artist' || u?.role === 'client' || u?.role === 'admin') role = u.role
+      if (typeof u?.displayName === 'string' && u.displayName) displayName = u.displayName
+    }
+  } catch {}
+
   const fallback: PublicProfile = {
     uid,
-    role: 'client',
-    displayName: 'Client',
+    role,
+    displayName,
     city: '',
     styles: '',
-  }
+    isPublic: role === 'artist' ? false : true,
+  } as any
   await set(ref(db, `publicProfiles/${uid}`), fallback)
   return fallback
 }

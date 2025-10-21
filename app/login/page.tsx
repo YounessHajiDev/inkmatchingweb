@@ -6,6 +6,8 @@ import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmail
 import { auth } from '@/lib/firebaseClient'
 import { useAuth } from '@/components/AuthProvider'
 import { saveMyPublicProfile, getPublicProfile } from '@/lib/publicProfiles'
+import { ref, set } from 'firebase/database'
+import { db } from '@/lib/firebaseClient'
 import type { UserRole } from '@/types'
 
 type Mode = 'signin' | 'signup'
@@ -89,6 +91,15 @@ export default function LoginPage() {
       if (displayName.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() })
       }
+      // Persist role to private users path immediately so the account type is correct from the start
+      await set(ref(db, `users/${credential.user.uid}`), {
+        uid: credential.user.uid,
+        email,
+        displayName: displayName.trim() || email,
+        role: accountType,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      })
       await saveMyPublicProfile(credential.user.uid, {
         uid: credential.user.uid,
         role: accountType,
