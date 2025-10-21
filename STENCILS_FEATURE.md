@@ -1,7 +1,7 @@
 # Stencils Feature
 
 ## Overview
-The Stencils page allows users to upload their own tattoo stencil images or generate them using AI (DALL-E 3).
+The Stencils page allows users to upload their own tattoo stencil images or generate them using AI (DALL-E 3), and send them directly to artists through the integrated messaging system.
 
 ## Features
 
@@ -19,7 +19,15 @@ The Stencils page allows users to upload their own tattoo stencil images or gene
 ### 3. **View & Preview**
 - Click any stencil to view it in full screen
 - Responsive grid layout (2-4 columns based on screen size)
-- Thumbnail view with hover effects
+- Thumbnail view with hover effects showing quick actions
+
+### 4. **Send to Artist** ⭐ NEW
+- **Direct Send**: Click "Send" button on any stencil thumbnail
+- **From Preview**: Open full-screen preview and click "Send to Artist"
+- **Artist Selection**: Search and browse available artists
+- **Smart Search**: Filter by name, city, or tattoo style
+- **Instant Messaging**: Creates/opens chat thread and sends stencil
+- **Auto-Navigate**: Redirects to chat after sending
 
 ## Setup Requirements
 
@@ -66,7 +74,7 @@ Generates a tattoo stencil using AI.
 ```
 app/
   stencils/
-    page.tsx                          # Main stencils page with UI
+    page.tsx                          # Main stencils page with UI & send feature
   api/
     stencils/
       generate/
@@ -75,16 +83,45 @@ app/
 lib/
   stencils.ts                         # Client-side stencil functions
   firebaseAdmin.ts                    # Admin SDK with storage
+  publicProfiles.ts                   # Fetch artists for selection
+  realtime.ts                         # Chat/messaging integration
 ```
+
+## Key Integration Points
+
+### With Messaging System
+- Uses `ensureOneToOneThread()` to create/get chat thread
+- Uses `sendImageAttachment()` to send stencil as message
+- Validates artist-client relationship
+- Auto-creates lead if first message
+
+### With Artist Discovery
+- Fetches artists using `fetchArtistsOnce()`
+- Filters by display name, city, and styles
+- Shows artist profile pictures and details
+- Real-time search filtering
 
 ## Usage Flow
 
+### Basic Flow
 1. **User visits `/stencils`**
 2. **Choose option:**
    - Click "Generate with AI" → Enter prompt → AI creates stencil
    - Click "Upload" → Select file → Instant upload
 3. **Stencil appears in grid**
 4. **Click to preview full size**
+
+### Sending to Artists Flow
+1. **Hover over any stencil** → Click "Send" button
+   - OR click stencil to open preview → Click "Send to Artist"
+2. **Artist selection modal opens**
+   - Browse list of available artists
+   - Use search to filter by name, city, or style
+   - See artist profile pictures and specialties
+3. **Click on artist** to send
+4. **Automatically creates/opens chat thread**
+5. **Stencil sent as image attachment**
+6. **Redirected to chat** to continue conversation
 
 ## AI Prompt Tips
 For best results, prompts should include:
@@ -95,14 +132,19 @@ For best results, prompts should include:
 
 Example: "A minimalist dragon wrapped around a sword, black and white line art suitable for a tattoo stencil"
 
-## Next Steps for Sending to Artists
+## Benefits
 
-To complete the flow of sending stencils to artists, you would need to:
+### For Clients
+- **Streamlined Communication**: Send visual references directly to artists
+- **No Context Loss**: Stencils preserved in chat history
+- **Easy Discovery**: Find the right artist with search filters
+- **Visual Portfolio**: Keep all stencil ideas in one place
 
-1. Add a "Send to Artist" button in the stencil preview modal
-2. Create a selection mechanism to choose which artist
-3. Integrate with your chat or messaging system
-4. Optionally attach stencils to booking requests
+### For Artists
+- **Clear Vision**: Receive client ideas as visual references
+- **Professional Flow**: All communication in one platform
+- **Better Proposals**: Understand client vision before responding
+- **Lead Generation**: First stencil creates automatic lead entry
 
 ## Cost Considerations
 
