@@ -13,6 +13,21 @@ async function fetchProfile(uid: string): Promise<PublicProfile | null> {
   return snap.val() as PublicProfile
 }
 
+async function ensureDefaultClientProfile(uid: string): Promise<PublicProfile> {
+  // Provision a minimal client profile if none exists so the user can message artists.
+  const existing = await fetchProfile(uid)
+  if (existing) return existing
+  const fallback: PublicProfile = {
+    uid,
+    role: 'client',
+    displayName: 'Client',
+    city: '',
+    styles: '',
+  }
+  await set(ref(db, `publicProfiles/${uid}`), fallback)
+  return fallback
+}
+
 function canMessageBetween(a: PublicProfile | null, b: PublicProfile | null): boolean {
   if (!a || !b) return false
   if (a.role === 'admin' || b.role === 'admin') return true
@@ -105,7 +120,11 @@ export async function ensureOneToOneThread(
   const indexSnap = await get(indexRef)
   if (indexSnap.exists()) return threadId
 
-  const [myProfile, otherProfile] = await Promise.all([fetchProfile(myUid), fetchProfile(otherUid)])
+  // Ensure my profile exists; for the other participant (artist), we expect it to exist if selectable in the UI
+  const [myProfile, otherProfile] = await Promise.all([
+    ensureDefaultClientProfile(myUid),
+    fetchProfile(otherUid),
+  ])
   if (!canMessageBetween(myProfile, otherProfile)) {
     throw new Error('Conversations are limited to artists and clients within the platform.')
   }

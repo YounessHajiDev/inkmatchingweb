@@ -1,0 +1,49 @@
+{
+  "rules": {
+    "/": {
+      ".read": false,
+      ".write": false
+    },
+
+    "publicProfiles": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "threads": {
+      "$threadId": {
+        ".read": "auth != null && data.child('members/' + auth.uid).val() === true",
+        ".write": "auth != null && (data.child('members/' + auth.uid).val() === true || newData.child('members/' + auth.uid).val() === true)"
+      }
+    },
+
+    "messages": {
+      "$threadId": {
+        ".read": "auth != null && root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true",
+        "$messageId": {
+          ".write": "auth != null && (root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true || newData.root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true)"
+        }
+      }
+    },
+
+    "userThreads": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$threadId": {
+          ".write": "auth != null && (auth.uid === $uid || root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true || newData.root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true)"
+        }
+      }
+    },
+
+    "leadsByArtist": {
+      "$artistUid": {
+        ".read": "auth != null && auth.uid === $artistUid",
+        "$leadId": {
+          ".write": "auth != null" 
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,10 @@ if (getApps().length === 0) {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   const hasServiceAccount = Boolean(serviceAccountJson)
   const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+  const rawBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+  const storageBucket = rawBucket && rawBucket.includes('firebasestorage.app')
+    ? `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com`
+    : rawBucket
 
   if (!databaseURL) {
     throw new Error(
