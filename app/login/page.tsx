@@ -43,8 +43,9 @@ export default function LoginPage() {
   }, [rememberEmail, email])
 
   useEffect(() => {
-    if (user) router.push('/')
-  }, [user, router])
+    // Only auto-redirect if user is logged in and we're not in the middle of a form submission
+    if (user && !loading) router.push('/')
+  }, [user, router, loading])
 
   const title = useMemo(() => mode === 'signin' ? 'InkMatching' : 'Create your account', [mode])
   const description = useMemo(() => mode === 'signin'
@@ -108,6 +109,11 @@ export default function LoginPage() {
         styles: '',
         isPublic: accountType === 'artist' ? false : true,
       })
+      
+      // Brief delay to ensure auth state propagates through AuthProvider
+      // so useUserRole can immediately detect the correct role on the target page
+      await new Promise(resolve => setTimeout(resolve, 400))
+      
       router.push(accountType === 'artist' ? '/settings' : '/')
     } catch (err: any) {
       setError(err?.message ?? 'Authentication failed.')
