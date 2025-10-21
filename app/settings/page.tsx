@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, deleteUser } from 'firebase/auth'
-import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/outline'
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 import { auth } from '@/lib/firebaseClient'
 import { useAuth } from '@/components/AuthProvider'
 import { getPublicProfile, saveMyPublicProfile } from '@/lib/publicProfiles'
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [city, setCity] = useState('')
   const [styles, setStyles] = useState('')
   const [portfolioImages, setPortfolioImages] = useState<string[]>([])
+  const [coverURL, setCoverURL] = useState('')
   const [uploadingPortfolio, setUploadingPortfolio] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [schedule, setSchedule] = useState(3)
@@ -70,6 +72,7 @@ export default function SettingsPage() {
           const stylesStr = Array.isArray(p.styles) ? p.styles.join(', ') : (p.styles ?? '')
           setStyles(stylesStr)
           setPortfolioImages(p.portfolioImages ?? [])
+          setCoverURL(p.coverURL ?? '')
         }
       } catch (e) {
         console.error(e)
@@ -82,10 +85,19 @@ export default function SettingsPage() {
   const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
+    if (portfolioImages.length >= 5) {
+      setStatusMessage('Maximum 5 portfolio images allowed')
+      e.target.value = ''
+      return
+    }
     setUploadingPortfolio(true)
     try {
       const url = await uploadStencil(user.uid, file)
       setPortfolioImages([...portfolioImages, url])
+      // Set as cover if it's the first image
+      if (portfolioImages.length === 0) {
+        setCoverURL(url)
+      }
       setStatusMessage('Portfolio image uploaded')
     } catch (err: any) {
       console.error('Upload failed:', err)
@@ -97,7 +109,18 @@ export default function SettingsPage() {
   }
 
   const removePortfolioImage = (index: number) => {
-    setPortfolioImages(portfolioImages.filter((_, i) => i !== index))
+    const imageToRemove = portfolioImages[index]
+    const newImages = portfolioImages.filter((_, i) => i !== index)
+    setPortfolioImages(newImages)
+    // If we removed the cover image, set the first remaining image as cover
+    if (imageToRemove === coverURL) {
+      setCoverURL(newImages[0] ?? '')
+    }
+  }
+
+  const setAsFeaturedCover = (url: string) => {
+    setCoverURL(url)
+    setStatusMessage('Featured cover image updated')
   }
 
   const saveProfile = async (makePublic?: boolean) => {
@@ -110,6 +133,7 @@ export default function SettingsPage() {
         city: city.trim(),
         styles: styles.split(',').map((s) => s.trim()).filter(Boolean),
         portfolioImages: portfolioImages,
+        coverURL: coverURL,
         isPublic: makePublic ?? (publicProfile === 'public'),
       }
 
@@ -256,30 +280,111 @@ export default function SettingsPage() {
                 <input className="input" value={styles} onChange={(e) => setStyles(e.target.value)} placeholder="Blackwork, Realism, Fine line" />
               </div>
               
-              {/* Portfolio Images */}
+              {/* Portfolio Images with Featured Cover */}
               {profile?.role === 'artist' && (
-                <div>
-                  <label className="label">Portfolio Images</label>
-                  <div className="space-y-3">
+                <div className="space-y-4">
+                  <div>
+                    <label className="label mb-3">Featured Cover Image</label>
+                    <p className="text-xs text-ink-text-muted mb-3">This large image will be shown at the top of your profile on the Discover page</p>
+                    <div className="relative w-full h-64 rounded-2xl overflow-hidden border-2 border-ink-accent/30 bg-gradient-to-br from-ink-accent/10 via-purple-500/10 to-ink-accent/5 shadow-glow group">
+                      {coverURL ? (
+                        <>
+                          <Image src={coverURL} alt="Featured cover" fill className="object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-ink-accent/90 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-glow">
+                            <StarIconSolid className="w-4 h-4" />
+                            Featured
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <div className="text-center space-y-2">
+                            <StarIcon className="w-12 h-12 text-ink-text-muted mx-auto opacity-40" />
+                            <p className="text-sm text-ink-text-muted">No featured cover image</p>
+                            <p className="text-xs text-ink-text-muted">Upload portfolio images below and tap the star to set as featured</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label mb-3">Portfolio Images (up to 5)</label>
+                    <p className="text-xs text-ink-text-muted mb-3">These images showcase your work. Tap the star icon to set one as your featured cover.</p>
+                    
                     {portfolioImages.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                         {portfolioImages.map((url, i) => (
-                          <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
+                          <div 
+                            key={i} 
+                            className={`relative aspect-square rounded-xl overflow-hidden border-2 group transition-all ${
+                              url === coverURL 
+                                ? 'border-ink-accent shadow-glow ring-2 ring-ink-accent/30' 
+                                : 'border-white/10 hover:border-ink-accent/50'
+                            }`}
+                          >
                             <Image src={url} alt={`Portfolio ${i + 1}`} fill className="object-cover" />
-                            <button
-                              onClick={() => removePortfolioImage(i)}
-                              className="absolute top-1 right-1 p-1 rounded-full bg-red-500/80 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <XMarkIcon className="w-4 h-4 text-white" />
-                            </button>
+                            
+                            {/* Gradient overlay on hover */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            
+                            {/* Featured badge */}
+                            {url === coverURL && (
+                              <div className="absolute top-2 left-2 flex items-center gap-1 bg-ink-accent text-white px-2 py-1 rounded-full text-[10px] font-bold shadow-glow">
+                                <StarIconSolid className="w-3 h-3" />
+                                FEATURED
+                              </div>
+                            )}
+                            
+                            {/* Action buttons */}
+                            <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => setAsFeaturedCover(url)}
+                                disabled={url === coverURL}
+                                className={`p-2 rounded-full backdrop-blur-xl transition-all ${
+                                  url === coverURL
+                                    ? 'bg-ink-accent/90 text-white cursor-default'
+                                    : 'bg-white/20 hover:bg-ink-accent/90 text-white hover:scale-110'
+                                }`}
+                                title={url === coverURL ? 'Currently featured' : 'Set as featured cover'}
+                              >
+                                {url === coverURL ? (
+                                  <StarIconSolid className="w-4 h-4" />
+                                ) : (
+                                  <StarIcon className="w-4 h-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => removePortfolioImage(i)}
+                                className="p-2 rounded-full bg-red-500/80 hover:bg-red-500 text-white transition-all hover:scale-110 backdrop-blur-xl"
+                                title="Remove image"
+                              >
+                                <XMarkIcon className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     )}
-                    <label className="btn btn-secondary cursor-pointer w-full">
-                      {uploadingPortfolio ? 'Uploading...' : '+ Add Portfolio Image'}
-                      <input type="file" accept="image/*" onChange={handlePortfolioUpload} className="hidden" disabled={uploadingPortfolio} />
-                    </label>
+                    
+                    {portfolioImages.length < 5 ? (
+                      <label className="btn btn-secondary cursor-pointer w-full flex items-center justify-center gap-2 group">
+                        <span className="text-2xl group-hover:scale-110 transition-transform">+</span>
+                        {uploadingPortfolio ? 'Uploading...' : `Add Portfolio Image (${portfolioImages.length}/5)`}
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handlePortfolioUpload} 
+                          className="hidden" 
+                          disabled={uploadingPortfolio} 
+                        />
+                      </label>
+                    ) : (
+                      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+                        <p className="text-sm text-ink-text-muted">Maximum of 5 portfolio images reached</p>
+                        <p className="text-xs text-ink-text-muted mt-1">Remove an image to upload a new one</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
