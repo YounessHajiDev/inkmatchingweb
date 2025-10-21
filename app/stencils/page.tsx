@@ -113,35 +113,35 @@ export default function StencilsPage() {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Stencils</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button 
             onClick={() => setShowAIModal(true)}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary"
           >
             <SparklesIcon className="w-5 h-5" />
             Generate with AI
           </button>
-          <label className="btn-primary cursor-pointer flex items-center gap-2">
+          <label className="btn-secondary cursor-pointer">
             <ArrowUpTrayIcon className="w-5 h-5" />
             {busy ? 'Uploading…' : 'Upload'}
-            <input type="file" accept="image/*" onChange={onUpload} className="hidden" />
+            <input type="file" accept="image/*" onChange={onUpload} className="hidden" disabled={busy} />
           </label>
         </div>
       </div>
 
       {urls.length === 0 ? (
-        <div className="card p-12 text-center space-y-4">
-          <div className="text-gray-400 text-lg">No stencils yet</div>
-          <p className="text-gray-500 text-sm">Upload an image or generate one using AI to get started</p>
+        <div className="card p-12 text-center space-y-6">
+          <div className="text-gray-400 text-lg font-medium">No stencils yet</div>
+          <p className="text-gray-500 text-sm max-w-md mx-auto">Upload an image or generate one using AI to get started with your tattoo designs</p>
           <div className="flex justify-center gap-4 pt-4">
             <button 
               onClick={() => setShowAIModal(true)}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary"
             >
               <SparklesIcon className="w-5 h-5" />
               Generate with AI
             </button>
-            <label className="btn-primary cursor-pointer flex items-center gap-2">
+            <label className="btn-secondary cursor-pointer">
               <ArrowUpTrayIcon className="w-5 h-5" />
               Upload Image
               <input type="file" accept="image/*" onChange={onUpload} className="hidden" />
@@ -163,22 +163,22 @@ export default function StencilsPage() {
                 onClick={() => setSelectedStencil(u)}
               />
               {/* Overlay with actions */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-4 gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     setSelectedStencil(u)
                   }}
-                  className="px-3 py-2 bg-white/90 hover:bg-white text-black rounded-lg text-sm font-medium transition-colors"
+                  className="btn-secondary btn-sm"
                 >
-                  View
+                  View Full
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     handleSendToArtist(u)
                   }}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1 transition-colors"
+                  className="btn-primary btn-sm"
                 >
                   <PaperAirplaneIcon className="w-4 h-4" />
                   Send
@@ -191,41 +191,42 @@ export default function StencilsPage() {
 
       {/* AI Generation Modal */}
       {showAIModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full p-6 space-y-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-ink-surface border border-white/10 rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-glow-soft animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <SparklesIcon className="w-6 h-6 text-blue-500" />
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <SparklesIcon className="w-7 h-7 text-ink-accent" />
                 Generate Stencil with AI
               </h2>
               <button 
                 onClick={() => setShowAIModal(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="btn-icon-secondary"
+                disabled={generating}
               >
-                <XMarkIcon className="w-6 h-6" />
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className="space-y-3">
+              <label className="label">
                 Describe your tattoo stencil
               </label>
               <textarea
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 placeholder="e.g., A minimalist dragon wrapped around a sword, black and white line art suitable for a tattoo stencil"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white min-h-[120px] resize-none"
+                className="textarea min-h-[140px]"
                 disabled={generating}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Be specific about style, elements, and composition for best results
+              <p className="text-xs text-ink-text-muted">
+                💡 Be specific about style, elements, and composition for best results
               </p>
             </div>
 
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setShowAIModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex-1 btn-secondary"
                 disabled={generating}
               >
                 Cancel
@@ -233,7 +234,7 @@ export default function StencilsPage() {
               <button
                 onClick={onGenerateAI}
                 disabled={!aiPrompt.trim() || generating}
-                className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 btn-primary"
               >
                 {generating ? (
                   <>
@@ -255,26 +256,26 @@ export default function StencilsPage() {
       {/* Stencil Preview Modal */}
       {selectedStencil && (
         <div 
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedStencil(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute -top-12 right-0 flex gap-2">
+          <div className="relative max-w-5xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute -top-14 right-0 flex gap-3">
               <button 
                 onClick={() => handleSendToArtist(selectedStencil)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                className="btn-primary"
               >
                 <PaperAirplaneIcon className="w-5 h-5" />
                 Send to Artist
               </button>
               <button 
                 onClick={() => setSelectedStencil(null)}
-                className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="btn-icon-secondary"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
             </div>
-            <div className="relative w-full h-[80vh]">
+            <div className="relative w-full h-[80vh] rounded-2xl overflow-hidden border border-white/10 shadow-glow">
               <Image 
                 src={selectedStencil} 
                 alt="Stencil preview" 
@@ -288,11 +289,11 @@ export default function StencilsPage() {
 
       {/* Send to Artist Modal */}
       {showSendModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <PaperAirplaneIcon className="w-6 h-6 text-blue-500" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-ink-surface border border-white/10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-glow-soft">
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <PaperAirplaneIcon className="w-7 h-7 text-ink-accent" />
                 Send to Artist
               </h2>
               <button 
@@ -301,30 +302,30 @@ export default function StencilsPage() {
                   setStencilToSend(null)
                   setArtistSearch('')
                 }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="btn-icon-secondary"
                 disabled={sending}
               >
-                <XMarkIcon className="w-6 h-6" />
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="p-6 space-y-4 flex-1 overflow-y-auto">
+            <div className="p-6 space-y-5 flex-1 overflow-y-auto">
               {/* Search Bar */}
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-text-muted" />
                 <input
                   type="text"
                   value={artistSearch}
                   onChange={(e) => setArtistSearch(e.target.value)}
                   placeholder="Search artists by name, city, or style..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="input pl-12"
                   disabled={sending}
                 />
               </div>
 
               {/* Preview */}
               {stencilToSend && (
-                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-white/10 shadow-inner-glow">
                   <Image 
                     src={stencilToSend} 
                     alt="Stencil to send" 
@@ -336,27 +337,37 @@ export default function StencilsPage() {
 
               {/* Artists List */}
               {loadingArtists ? (
-                <div className="text-center py-8 text-gray-500">Loading artists...</div>
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 border-2 border-ink-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-ink-text-muted text-sm">Loading artists...</p>
+                </div>
               ) : filteredArtists.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {artistSearch ? 'No artists found matching your search' : 'No artists available'}
+                <div className="text-center py-12 space-y-2">
+                  <p className="text-ink-text-muted">
+                    {artistSearch ? 'No artists found matching your search' : 'No artists available'}
+                  </p>
+                  {artistSearch && (
+                    <button onClick={() => setArtistSearch('')} className="btn-ghost btn-sm">
+                      Clear search
+                    </button>
+                  )}
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="space-y-3">
+                  <p className="text-sm text-ink-text-muted font-medium">
                     {filteredArtists.length} artist{filteredArtists.length !== 1 ? 's' : ''} available
                   </p>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                     {filteredArtists.map((artist) => (
                       <button
                         key={artist.uid}
                         onClick={() => sendStencilToArtist(artist.uid)}
                         disabled={sending}
-                        className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full p-4 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/10 hover:border-ink-accent/40 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed group"
                       >
                         <div className="flex items-center gap-4">
                           {artist.coverURL && (
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                            <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
                               <Image 
                                 src={artist.coverURL} 
                                 alt={artist.displayName} 
@@ -366,19 +377,19 @@ export default function StencilsPage() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg truncate">
+                            <h3 className="font-semibold text-lg truncate group-hover:text-ink-accent transition-colors">
                               {artist.displayName}
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {artist.city}
+                            <p className="text-sm text-ink-text-muted">
+                              📍 {artist.city}
                             </p>
                             {artist.normalizedStyles && (
-                              <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                              <p className="text-xs text-ink-text-muted truncate mt-1">
                                 {artist.normalizedStyles}
                               </p>
                             )}
                           </div>
-                          <PaperAirplaneIcon className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                          <PaperAirplaneIcon className="w-5 h-5 text-ink-accent flex-shrink-0 group-hover:scale-110 transition-transform" />
                         </div>
                       </button>
                     ))}
@@ -387,9 +398,9 @@ export default function StencilsPage() {
               )}
 
               {sending && (
-                <div className="flex items-center justify-center gap-3 py-4">
-                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-gray-600 dark:text-gray-400">Sending stencil...</span>
+                <div className="flex items-center justify-center gap-3 py-6 bg-ink-surface/50 rounded-2xl">
+                  <div className="w-6 h-6 border-2 border-ink-accent border-t-transparent rounded-full animate-spin" />
+                  <span className="text-ink-text font-medium">Sending stencil...</span>
                 </div>
               )}
             </div>

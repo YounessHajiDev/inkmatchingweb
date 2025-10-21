@@ -26,26 +26,62 @@
     @apply pointer-events-none absolute inset-0 rounded-3xl border border-white/5;
   }
 
+  /* Base button styles */
   .btn {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-accent/40;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-accent/50 disabled:cursor-not-allowed disabled:opacity-60 hover:scale-[1.02] active:scale-[0.98];
   }
 
+  /* Primary gradient button */
   .btn-primary {
-    @apply text-white shadow-glow;
+    @apply btn text-white shadow-glow;
     background-image: linear-gradient(120deg, #24d1f7 0%, #7c5cff 100%);
   }
 
   .btn-primary:hover:not(:disabled) {
-    filter: brightness(1.05);
-    box-shadow: 0 12px 45px -15px rgba(36,209,247,0.6);
+    filter: brightness(1.1);
+    box-shadow: 0 12px 45px -15px rgba(36,209,247,0.7);
   }
 
-  .btn-primary:disabled {
-    @apply cursor-not-allowed opacity-60;
-  }
-
+  /* Secondary outline button */
   .btn-secondary {
-    @apply border border-white/10 bg-white/5 text-ink-text hover:border-ink-accent/40 hover:text-white;
+    @apply btn border border-white/10 bg-white/5 text-ink-text hover:border-ink-accent/40 hover:bg-white/10 hover:text-white backdrop-blur-md;
+  }
+
+  /* Danger/Delete button */
+  .btn-danger {
+    @apply btn border border-red-400/40 bg-red-500/10 text-red-200 hover:border-red-400/60 hover:bg-red-500/20;
+  }
+
+  /* Success/Confirm button */
+  .btn-success {
+    @apply btn border border-green-400/40 bg-green-500/10 text-green-200 hover:border-green-400/60 hover:bg-green-500/20;
+  }
+
+  /* Ghost button (minimal) */
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-text-muted hover:bg-white/5 hover:text-white;
+  }
+
+  /* Icon button (small, square) */
+  .btn-icon {
+    @apply relative inline-flex items-center justify-center rounded-full p-2.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-accent/50 hover:scale-105 active:scale-95;
+  }
+
+  .btn-icon-primary {
+    @apply btn-icon bg-ink-button text-white shadow-glow-soft hover:shadow-glow;
+  }
+
+  .btn-icon-secondary {
+    @apply btn-icon border border-white/10 bg-white/5 text-ink-text hover:border-ink-accent/40 hover:text-white backdrop-blur-md;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply px-4 py-2 text-xs;
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-base;
   }
 
   .pill {
@@ -53,15 +89,15 @@
   }
 
   .input {
-    @apply w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-ink-text-muted focus:border-ink-accent focus:outline-none focus:ring-2 focus:ring-ink-accent/40;
+    @apply w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-ink-text-muted focus:border-ink-accent focus:outline-none focus:ring-2 focus:ring-ink-accent/40 transition-all duration-200;
   }
 
   .textarea {
-    @apply w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-ink-text-muted focus:border-ink-accent focus:outline-none focus:ring-2 focus:ring-ink-accent/40;
+    @apply w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-ink-text-muted focus:border-ink-accent focus:outline-none focus:ring-2 focus:ring-ink-accent/40 resize-none transition-all duration-200;
   }
 
   .label {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-ink-text-muted;
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.2em] text-ink-text-muted;
   }
 
   .section-title {
