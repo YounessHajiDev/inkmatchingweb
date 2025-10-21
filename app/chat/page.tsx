@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { subscribeToUserThreads } from '@/lib/realtime'
+import { subscribeToUserThreads, deleteChatForUser } from '@/lib/realtime'
 import { getPublicProfile } from '@/lib/publicProfiles'
 import type { PublicProfile, UserThread } from '@/types'
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 export default function ChatLandingPage() {
   const { user, loading } = useAuth()
@@ -137,23 +137,45 @@ export default function ChatLandingPage() {
             const otherId = Object.keys(thread.members || {}).find((uid) => uid !== user.uid)
             const otherProfile = otherId ? profiles[otherId] : undefined
             return (
-              <button
+              <div
                 key={thread.threadId}
-                onClick={() => router.push(`/chat/${thread.threadId}`)}
                 className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition hover:bg-white/[0.06]"
               >
-                <div>
-                  <div className="text-sm font-semibold text-white">
-                    {otherProfile?.displayName || 'Conversation'}
+                <button
+                  onClick={() => router.push(`/chat/${thread.threadId}`)}
+                  className="flex flex-1 items-center justify-between gap-4"
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-white">
+                      {otherProfile?.displayName || 'Conversation'}
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-xs text-ink-text-muted">
+                      {thread.lastMessage || 'No messages yet'}
+                    </div>
                   </div>
-                  <div className="mt-1 line-clamp-2 text-xs text-ink-text-muted">
-                    {thread.lastMessage || 'No messages yet'}
+                  <div className="text-xs text-ink-text-muted">
+                    {new Date(thread.updatedAt).toLocaleDateString()} · {new Date(thread.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
-                </div>
-                <div className="text-xs text-ink-text-muted">
-                  {new Date(thread.updatedAt).toLocaleDateString()} · {new Date(thread.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </button>
+                </button>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    if (!user) return
+                    const ok = window.confirm('Delete this chat from your inbox? This will not affect the other participant.')
+                    if (!ok) return
+                    try {
+                      await deleteChatForUser(thread.threadId!, user.uid)
+                    } catch (err) {
+                      console.error(err)
+                      alert('Failed to delete chat. Please try again.')
+                    }
+                  }}
+                  className="ml-2 inline-flex items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 p-2 text-red-200 hover:border-red-400 hover:bg-red-500/20"
+                  title="Delete chat"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </button>
+              </div>
             )
           })}
         </div>

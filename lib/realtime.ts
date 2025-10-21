@@ -317,6 +317,35 @@ export function subscribeToLeads(
   return () => off(leadsRef, 'value', listener)
 }
 
+/**
+ * Soft-delete a chat for a single user. This removes the thread index from userThreads/{uid}/{threadId}
+ * so it disappears from their inbox, but does not affect the other participant.
+ * If no participant keeps the thread in their inbox after this operation, the thread and its messages
+ * are permanently removed to avoid orphaned data.
+ */
+export async function deleteChatForUser(threadId: string, uid: string): Promise<void> {
+  // Ensure the requester is a member of the thread
+  const thread = await assertThreadMember(threadId, uid)
+
+  // Remove this user's index entry (soft delete)
+  await set(ref(db, `userThreads/${uid}/${threadId}`), null)
+
+  // Check if any participant still references this thread
+  const memberIds = Object.keys(thread.members || {})
+  const snapshots = await Promise.all(
+    memberIds.map((m) => get(ref(db, `userThreads/${m}/${threadId}`)))
+  )
+  const anyLeft = snapshots.some((s) => s.exists())
+
+  if (!anyLeft) {
+    // No one references the thread anymore; clean up the thread and its messages
+    await update(ref(db), {
+      [`threads/${threadId}`]: null,
+      [`messages/${threadId}`]: null,
+    })
+  }
+}
+
 export async function updateLeadStatus(
   artistUid: string,
   leadId: string,

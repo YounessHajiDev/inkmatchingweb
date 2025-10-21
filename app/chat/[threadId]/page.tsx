@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { subscribeToMessages, sendText } from '@/lib/realtime'
+import { subscribeToMessages, sendText, deleteChatForUser } from '@/lib/realtime'
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
 import type { Message } from '@/types'
 
 export default function ChatPage() {
@@ -58,6 +59,30 @@ export default function ChatPage() {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8">
       <div className="flex h-[calc(100vh-11rem)] flex-col overflow-hidden rounded-4xl border border-white/10 bg-white/[0.03] shadow-glow-soft backdrop-blur-md">
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.04] px-4 py-3 sm:px-6">
+          <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-ink-text-muted hover:text-white">
+            <ArrowLeftIcon className="h-5 w-5" />
+            Back
+          </button>
+          <button
+            onClick={async () => {
+              if (!user) return
+              const ok = window.confirm('Delete this chat from your inbox? This will not affect the other participant.')
+              if (!ok) return
+              try {
+                await deleteChatForUser(threadId, user.uid)
+                router.replace('/chat')
+              } catch (err) {
+                console.error(err)
+                alert('Failed to delete chat. Please try again.')
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-200 hover:border-red-400 hover:bg-red-500/20"
+          >
+            <TrashIcon className="h-4 w-4" />
+            Delete chat
+          </button>
+        </div>
         <div className="relative flex-1 overflow-y-auto px-4 py-6 sm:px-8">
           <div className="absolute inset-0 bg-ink-panel opacity-30" aria-hidden />
           <div className="relative z-10 space-y-4">
