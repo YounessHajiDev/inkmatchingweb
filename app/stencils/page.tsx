@@ -47,6 +47,10 @@ export default function StencilsPage() {
     try {
       await uploadStencil(user.uid, file)
       setUrls(await listStencils(user.uid))
+    } catch (err: any) {
+      console.error('Upload failed:', err)
+      const msg: string = err?.message || 'Upload failed. Please try again.'
+      alert(msg)
     } finally { setBusy(false); e.target.value = '' }
   }
 

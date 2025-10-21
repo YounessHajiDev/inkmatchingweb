@@ -4,7 +4,15 @@ import { ref as sRef, uploadBytes, getDownloadURL, listAll } from 'firebase/stor
 export async function uploadStencil(uid: string, file: File): Promise<string> {
   const path = `stencils/${uid}/${Date.now()}_${file.name}`
   const ref = sRef(storage, path)
-  await uploadBytes(ref, file, { contentType: file.type })
+  try {
+    await uploadBytes(ref, file, { contentType: file.type })
+  } catch (e: any) {
+    const msg = e?.message || ''
+    if (msg.includes('retry') || msg.includes('storage/retry-limit-exceeded')) {
+      throw new Error('Upload timed out. Please verify your Firebase Storage bucket setting (should look like my-project.appspot.com) and ensure Storage rules allow authenticated writes to stencils/.')
+    }
+    throw e
+  }
   return getDownloadURL(ref)
 }
 
