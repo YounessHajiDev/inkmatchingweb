@@ -4,6 +4,7 @@ export type MessageKind = 'text' | 'image' | 'location' | 'system'
 export type LeadStatus = 'new' | 'accepted' | 'declined' | 'archived'
 export type BookingStatus = 'pending' | 'accepted' | 'declined' | 'cancelled' | 'completed'
 export type PaymentStatus = 'not_required' | 'pending' | 'requires_action' | 'succeeded' | 'cancelled'
+export type AftercareStatus = 'active' | 'completed' | 'archived'
 
 export interface PublicProfile {
   uid: string
@@ -80,6 +81,29 @@ export interface Lead {
   status: LeadStatus
   threadId?: string
   attachments?: string[]
+  aftercareId?: string
+}
+
+export interface Aftercare {
+  id: string
+  artistUid: string
+  artistName: string
+  clientUid: string
+  clientName: string
+  leadId?: string
+  createdAt: number
+  updatedAt: number
+  status: AftercareStatus
+  tattooStyle?: string
+  tattooLocation?: string
+  instructions: {
+    title: string
+    content: string
+    day?: number
+  }[]
+  generalNotes?: string
+  scheduledDays?: number
+  completedDays?: number
 }
 
 export interface ArtistWithProfile extends PublicProfile {

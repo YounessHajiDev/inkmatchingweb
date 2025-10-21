@@ -208,6 +208,47 @@
           }
         }
       }
+    },
+
+    "aftercareByClient": {
+      "$clientUid": {
+        ".read": "auth != null && auth.uid == $clientUid",
+        ".indexOn": ["createdAt", "status"],
+        "$aftercareId": {
+          ".write": "auth != null && (auth.uid == newData.child('artistUid').val() || auth.uid == $clientUid)",
+          ".validate": "newData.hasChildren(['artistUid','artistName','clientUid','clientName','createdAt','updatedAt','status','instructions'])",
+          "artistUid":     { ".validate": "newData.isString()" },
+          "artistName":    { ".validate": "newData.isString()" },
+          "clientUid":     { ".validate": "newData.isString() && newData.val() == $clientUid" },
+          "clientName":    { ".validate": "newData.isString()" },
+          "leadId":        { ".validate": "newData.isString() || newData.val() == null" },
+          "createdAt":     { ".validate": "newData.isNumber()" },
+          "updatedAt":     { ".validate": "newData.isNumber()" },
+          "status":        { ".validate": "newData.isString() && newData.val().matches(/^(active|completed|archived)$/)" },
+          "tattooStyle":   { ".validate": "newData.isString() || newData.val() == null" },
+          "tattooLocation":{ ".validate": "newData.isString() || newData.val() == null" },
+          "instructions":  { ".validate": "newData.hasChildren()" },
+          "generalNotes":  { ".validate": "newData.isString() || newData.val() == null" },
+          "scheduledDays": { ".validate": "newData.isNumber() || newData.val() == null" },
+          "completedDays": { ".validate": "newData.isNumber() || newData.val() == null" }
+        }
+      }
+    },
+
+    "aftercareByArtist": {
+      "$artistUid": {
+        ".read": "auth != null && auth.uid == $artistUid",
+        ".indexOn": ["createdAt", "status"],
+        "$aftercareId": {
+          ".write": "auth != null && auth.uid == $artistUid",
+          ".validate": "newData.hasChildren(['aftercareId','clientUid','clientName','createdAt','status'])",
+          "aftercareId": { ".validate": "newData.isString()" },
+          "clientUid":   { ".validate": "newData.isString()" },
+          "clientName":  { ".validate": "newData.isString()" },
+          "createdAt":   { ".validate": "newData.isNumber()" },
+          "status":      { ".validate": "newData.isString() && newData.val().matches(/^(active|completed|archived)$/)" }
+        }
+      }
     }
   }
 }
