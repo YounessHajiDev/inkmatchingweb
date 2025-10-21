@@ -11,6 +11,7 @@ export interface PublicProfile {
   isPublic?: boolean
   displayName: string
   city: string
+  address?: string
   styles: string | string[]
   coverURL?: string
   portfolioImages?: string[]

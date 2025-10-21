@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('')
   const [city, setCity] = useState('')
   const [styles, setStyles] = useState('')
+  const [address, setAddress] = useState('')
   const [portfolioImages, setPortfolioImages] = useState<string[]>([])
   const [coverURL, setCoverURL] = useState('')
   const [uploadingPortfolio, setUploadingPortfolio] = useState(false)
@@ -69,6 +70,7 @@ export default function SettingsPage() {
           setPublicProfile(p.isPublic ? 'public' : 'hidden')
           setDisplayName(p.displayName ?? user.email ?? '')
           setCity(p.city ?? '')
+          setAddress(p.address ?? '')
           const stylesStr = Array.isArray(p.styles) ? p.styles.join(', ') : (p.styles ?? '')
           setStyles(stylesStr)
           setPortfolioImages(p.portfolioImages ?? [])
@@ -132,15 +134,17 @@ export default function SettingsPage() {
         displayName: displayName.trim() || user.email || 'Artist',
         city: city.trim(),
         styles: styles.split(',').map((s) => s.trim()).filter(Boolean),
+        address: address.trim() || undefined,
         portfolioImages: portfolioImages,
         coverURL: coverURL,
         isPublic: makePublic ?? (publicProfile === 'public'),
       }
 
-      // Geocode the city to get coordinates
-      if (input.city && input.role === 'artist') {
+      // Geocode by address (preferred) or city to get coordinates
+      if ((input.address || input.city) && input.role === 'artist') {
         try {
-          const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input.city)}&format=json&limit=1`
+          const query = input.address ? `${input.address}${input.city ? ', ' + input.city : ''}` : input.city!
+          const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
           const response = await fetch(geocodeUrl, {
             headers: { 'User-Agent': 'InkMatching/1.0' }
           })
@@ -270,6 +274,10 @@ export default function SettingsPage() {
               <div>
                 <label className="label">Display name</label>
                 <input className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Artist or studio name" />
+              </div>
+              <div>
+                <label className="label">Address (optional)</label>
+                <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St, Suite 2" />
               </div>
               <div>
                 <label className="label">City</label>
