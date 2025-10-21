@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, deleteUser } from 'firebase/auth'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import { auth } from '@/lib/firebaseClient'
 import { useAuth } from '@/components/AuthProvider'
+import { getPublicProfile, saveMyPublicProfile } from '@/lib/publicProfiles'
+import type { PublicProfile } from '@/types'
 
 const appearanceOptions = ['system', 'dark', 'light'] as const
 
@@ -14,7 +16,12 @@ export default function SettingsPage() {
   const router = useRouter()
   const [appearance, setAppearance] = useState<typeof appearanceOptions[number]>('dark')
   const [rememberEmail, setRememberEmail] = useState(true)
+  const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [publicProfile, setPublicProfile] = useState<'hidden' | 'public' | 'draft'>('hidden')
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [displayName, setDisplayName] = useState('')
+  const [city, setCity] = useState('')
+  const [styles, setStyles] = useState('')
   const [notifications, setNotifications] = useState(true)
   const [schedule, setSchedule] = useState(3)
   const [locationPrecise, setLocationPrecise] = useState(false)
@@ -40,6 +47,52 @@ export default function SettingsPage() {
     } catch (error: any) {
       console.error(error)
       setStatusMessage(error?.message ?? 'Unable to delete account. Reauthenticate and try again.')
+    }
+  }
+
+  // Load current public profile
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      if (!user) return
+      try {
+        const p = await getPublicProfile(user.uid)
+        if (cancelled) return
+        if (p) {
+          setProfile(p)
+          setPublicProfile(p.isPublic ? 'public' : 'hidden')
+          setDisplayName(p.displayName ?? user.email ?? '')
+          setCity(p.city ?? '')
+          const stylesStr = Array.isArray(p.styles) ? p.styles.join(', ') : (p.styles ?? '')
+          setStyles(stylesStr)
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [user])
+
+  const saveProfile = async (makePublic?: boolean) => {
+    if (!user) return
+    try {
+      const input: Partial<PublicProfile> = {
+        uid: user.uid,
+        role: profile?.role ?? 'artist',
+        displayName: displayName.trim() || user.email || 'Artist',
+        city: city.trim(),
+        styles: styles.split(',').map((s) => s.trim()).filter(Boolean),
+        isPublic: makePublic ?? (publicProfile === 'public'),
+      }
+      await saveMyPublicProfile(user.uid, input)
+      setStatusMessage('Profile saved')
+      setEditingProfile(false)
+      setProfile({ ...(profile ?? (input as any)), ...(input as any) } as PublicProfile)
+      setPublicProfile((makePublic ?? input.isPublic) ? 'public' : 'hidden')
+    } catch (e: any) {
+      console.error(e)
+      setStatusMessage(e?.message ?? 'Unable to save profile')
     }
   }
 
@@ -112,28 +165,55 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Public profile</h2>
-          <p className="text-sm text-ink-text-muted">Control your Discover visibility.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Public profile</h2>
+              <p className="text-sm text-ink-text-muted">Control your Discover visibility.</p>
+            </div>
+            <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${publicProfile === 'public' ? 'border-ink-accent/60 text-white' : 'border-white/15 text-ink-text-muted'}`}>
+              {publicProfile === 'public' ? 'Public' : 'Hidden'}
+            </span>
+          </div>
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => setPublicProfile('draft')}
-              className={`btn ${publicProfile === 'draft' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setEditingProfile(true)}
+              className={`btn ${editingProfile ? 'btn-primary' : 'btn-secondary'}`}
             >
               Create / publish
             </button>
             <button
-              onClick={() => setPublicProfile('public')}
+              onClick={() => saveProfile(true)}
               className={`btn ${publicProfile === 'public' ? 'btn-primary' : 'btn-secondary'}`}
             >
               Make public
             </button>
             <button
-              onClick={() => setPublicProfile('hidden')}
+              onClick={() => saveProfile(false)}
               className={`btn ${publicProfile === 'hidden' ? 'btn-secondary border-white/30' : 'btn-secondary'}`}
             >
               Hide profile
             </button>
           </div>
+          {editingProfile && (
+            <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-white/[0.05] p-4">
+              <div>
+                <label className="label">Display name</label>
+                <input className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Artist or studio name" />
+              </div>
+              <div>
+                <label className="label">City</label>
+                <input className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g., Montreal" />
+              </div>
+              <div>
+                <label className="label">Styles (comma separated)</label>
+                <input className="input" value={styles} onChange={(e) => setStyles(e.target.value)} placeholder="Blackwork, Realism, Fine line" />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button className="btn btn-secondary" onClick={() => setEditingProfile(false)}>Cancel</button>
+                <button className="btn btn-primary" onClick={() => saveProfile()}>Save</button>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">

@@ -91,7 +91,7 @@ export default function LoginPage() {
         styles: '',
         isPublic: accountType === 'artist' ? false : true,
       })
-      router.push('/')
+      router.push(accountType === 'artist' ? '/settings' : '/')
     } catch (err: any) {
       setError(err?.message ?? 'Authentication failed.')
     } finally {
