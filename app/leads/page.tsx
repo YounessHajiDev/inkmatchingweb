@@ -1,13 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { subscribeToLeads, updateLeadStatus } from '@/lib/realtime'
 import { getPublicProfile } from '@/lib/publicProfiles'
+import Image from 'next/image'
 import type { Lead } from '@/types'
 
 export default function LeadsPage() {
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [leads, setLeads] = useState<Lead[]>([])
   const [userRole, setUserRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -99,11 +102,31 @@ export default function LeadsPage() {
                 </span>
               </div>
               {lead.message && <p className="mb-4 text-sm text-ink-text-muted">{lead.message}</p>}
+              
+              {/* Show stencil attachments if present */}
+              {lead.attachments && lead.attachments.length > 0 && (
+                <div className="mb-4 flex gap-2 overflow-x-auto">
+                  {lead.attachments.map((url, i) => (
+                    <div key={i} className="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-white/10 cursor-pointer hover:border-ink-accent/40 transition-colors" onClick={() => lead.threadId && router.push(`/chat/${lead.threadId}`)}>
+                      <Image src={url} alt={`Stencil ${i + 1}`} fill className="object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-xs text-white font-semibold">View in Chat</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-text-muted">
                 {lead.style && <span>Style: {lead.style}</span>}
                 {lead.city && <span>City: {lead.city}</span>}
               </div>
               <div className="flex flex-wrap gap-2">
+                {lead.threadId && (
+                  <button onClick={() => router.push(`/chat/${lead.threadId}`)} className="btn btn-secondary">
+                    Open Chat
+                  </button>
+                )}
                 {lead.status === 'new' && (
                   <>
                     <button onClick={() => handleStatusChange(lead.id, 'accepted')} className="btn btn-primary">Accept</button>

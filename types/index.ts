@@ -76,6 +76,8 @@ export interface Lead {
   city: string
   createdAt: number
   status: LeadStatus
+  threadId?: string
+  attachments?: string[]
 }
 
 export interface ArtistWithProfile extends PublicProfile {

@@ -72,7 +72,8 @@ async function ensureLeadForFirstMessage(
   threadId: string,
   senderId: string,
   previewText: string,
-  createdAtSeconds: number
+  createdAtSeconds: number,
+  attachments?: string[]
 ): Promise<void> {
   try {
     const threadSnap = await get(ref(db, `threads/${threadId}`))
@@ -102,6 +103,8 @@ async function ensureLeadForFirstMessage(
       city: '',
       createdAt: createdAtSeconds,
       status: 'new',
+      threadId,
+      attachments: attachments || [],
     }
 
     await set(leadRef, lead)
@@ -210,7 +213,7 @@ export async function sendImageAttachment(
   const memberIds = Object.keys(thread.members || {})
   await touchIndexes(threadId, memberIds, '📷')
   if (!thread.leadId) {
-    await ensureLeadForFirstMessage(threadId, senderId, '📷', Math.floor(Date.now() / 1000))
+    await ensureLeadForFirstMessage(threadId, senderId, '📷', Math.floor(Date.now() / 1000), [url])
   }
 }
 
@@ -324,4 +327,51 @@ export async function updateLeadStatus(
   if (snapshot.exists()) {
     await set(leadRef, { ...(snapshot.val() as any), status })
   }
+}
+
+export function subscribeToReceivedStencils(
+  artistUid: string,
+  callback: (stencils: Array<{ url: string; senderId: string; senderName: string; threadId: string; timestamp: number }>) => void
+): () => void {
+  // Subscribe to all threads for this artist and extract image messages
+  const threadsRef = ref(db, `userThreads/${artistUid}`)
+  const listener = onValue(threadsRef, async (snapshot) => {
+    if (!snapshot.exists()) { callback([]); return }
+    
+    const threadIds = Object.keys(snapshot.val())
+    const allStencils: Array<{ url: string; senderId: string; senderName: string; threadId: string; timestamp: number }> = []
+    
+    // Fetch messages from each thread
+    for (const threadId of threadIds) {
+      try {
+        const messagesSnap = await get(ref(db, `messages/${threadId}`))
+        if (!messagesSnap.exists()) continue
+        
+        const messages = messagesSnap.val()
+        for (const [msgId, msg] of Object.entries(messages)) {
+          const message = msg as any
+          // Only include image messages sent by others (clients)
+          if (message.kind === 'image' && message.senderId !== artistUid && message.attachments?.length > 0) {
+            // Fetch sender profile
+            const senderProfile = await fetchProfile(message.senderId)
+            allStencils.push({
+              url: message.attachments[0].url,
+              senderId: message.senderId,
+              senderName: senderProfile?.displayName || 'Client',
+              threadId,
+              timestamp: typeof message.createdAt === 'number' ? message.createdAt : Date.now() / 1000,
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching messages for thread:', threadId, error)
+      }
+    }
+    
+    // Sort by timestamp, newest first
+    allStencils.sort((a, b) => b.timestamp - a.timestamp)
+    callback(allStencils)
+  })
+  
+  return () => off(threadsRef, 'value', listener)
 }

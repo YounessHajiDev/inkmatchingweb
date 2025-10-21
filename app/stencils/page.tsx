@@ -4,16 +4,26 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { listStencils, uploadStencil, generateStencilWithAI } from '@/lib/stencils'
-import { fetchArtistsOnce } from '@/lib/publicProfiles'
-import { ensureOneToOneThread, sendImageAttachment } from '@/lib/realtime'
+import { fetchArtistsOnce, getPublicProfile } from '@/lib/publicProfiles'
+import { ensureOneToOneThread, sendImageAttachment, subscribeToReceivedStencils } from '@/lib/realtime'
 import Image from 'next/image'
 import { XMarkIcon, SparklesIcon, ArrowUpTrayIcon, PaperAirplaneIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import type { ArtistWithProfile } from '@/types'
 
+interface ReceivedStencil {
+  url: string
+  senderId: string
+  senderName: string
+  threadId: string
+  timestamp: number
+}
+
 export default function StencilsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [urls, setUrls] = useState<string[]>([])
+  const [receivedStencils, setReceivedStencils] = useState<ReceivedStencil[]>([])
   const [busy, setBusy] = useState(false)
   const [showAIModal, setShowAIModal] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
@@ -26,7 +36,27 @@ export default function StencilsPage() {
   const [sending, setSending] = useState(false)
   const [loadingArtists, setLoadingArtists] = useState(false)
 
-  useEffect(() => { if (user) listStencils(user.uid).then(setUrls) }, [user])
+  // Fetch user role
+  useEffect(() => {
+    if (!user) return
+    getPublicProfile(user.uid).then((profile) => {
+      setUserRole(profile?.role ?? 'client')
+    })
+  }, [user])
+
+  // For clients: load their uploaded stencils
+  useEffect(() => { 
+    if (user && userRole === 'client') {
+      listStencils(user.uid).then(setUrls) 
+    }
+  }, [user, userRole])
+
+  // For artists: subscribe to received stencils from chats
+  useEffect(() => {
+    if (!user || userRole !== 'artist') return
+    const unsubscribe = subscribeToReceivedStencils(user.uid, setReceivedStencils)
+    return unsubscribe
+  }, [user, userRole])
 
   useEffect(() => {
     if (showSendModal && artists.length === 0) {
@@ -38,8 +68,55 @@ export default function StencilsPage() {
   }, [showSendModal, artists.length])
 
   if (loading) return <div className="p-8 text-gray-400">Loading…</div>
-  if (!user) return <div className="p-8 text-gray-400">Please login to manage your stencils.</div>
+  if (!user) return <div className="p-8 text-gray-400">Please login to view stencils.</div>
 
+  // Artists see received stencils from clients
+  if (userRole === 'artist') {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        <div className="space-y-3">
+          <h1 className="text-3xl font-bold text-white">Received Stencils</h1>
+          <p className="text-sm text-ink-text-muted">Stencils sent to you by clients in conversations</p>
+        </div>
+
+        {receivedStencils.length === 0 ? (
+          <div className="card p-12 text-center space-y-6">
+            <div className="text-gray-400 text-lg font-medium">No stencils received yet</div>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">When clients send you stencils in chat, they will appear here</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {receivedStencils.map((stencil, i) => (
+              <div 
+                key={i} 
+                className="card overflow-hidden relative aspect-square group cursor-pointer"
+                onClick={() => router.push(`/chat/${stencil.threadId}`)}
+              >
+                <Image 
+                  src={stencil.url} 
+                  alt={`Stencil from ${stencil.senderName}`} 
+                  fill 
+                  className="object-cover"
+                />
+                {/* Overlay with sender info */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-end pb-4 gap-2">
+                  <p className="text-white text-sm font-semibold">{stencil.senderName}</p>
+                  <p className="text-ink-text-muted text-xs">
+                    {new Date(stencil.timestamp * 1000).toLocaleDateString()}
+                  </p>
+                  <button className="btn-primary btn-sm mt-2">
+                    Open Chat
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Clients see upload/AI generation UI
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
