@@ -142,6 +142,31 @@ After successful deployment:
 - [ ] Chat messaging
 - [ ] Payment flow (if using Stripe)
 
+### 4. Configure Firebase Storage (Critical for stencils feature)
+
+**Set up CORS** (required for browser uploads):
+```bash
+# Install Google Cloud SDK if not already installed
+brew install --cask google-cloud-sdk  # macOS
+# Or download from: https://cloud.google.com/sdk/docs/install
+
+# Authenticate
+gcloud auth login
+
+# Apply CORS config (use cors.json from the repo root)
+gsutil cors set cors.json gs://your-project-id.appspot.com
+
+# Verify
+gsutil cors get gs://your-project-id.appspot.com
+```
+
+**Set up Storage Rules** (use `storage.rules` from repo):
+1. Firebase Console → Storage → Rules
+2. Copy content from `storage.rules` in your repo
+3. Click "Publish"
+
+These steps are **required** for the stencils upload/AI generation feature to work.
+
 ## Common Issues & Solutions
 
 ### Issue: "Module not found" during build
@@ -163,6 +188,107 @@ After successful deployment:
 - Check Vercel function logs in the dashboard
 - Ensure all secret keys are set for production environment
 - Verify Firebase rules allow the operations
+
+### Issue: Firebase Storage CORS errors (blocked by CORS policy)
+**Symptoms**:
+```
+Access to XMLHttpRequest at 'https://firebasestorage.googleapis.com/v0/b/...' 
+from origin 'http://localhost:3000' has been blocked by CORS policy
+```
+
+**Root Cause**: Firebase Storage CORS is not configured for your domain.
+
+**Solution**:
+1. **Install gsutil** (Google Cloud SDK):
+   ```bash
+   # macOS
+   brew install --cask google-cloud-sdk
+   
+   # Or download from: https://cloud.google.com/sdk/docs/install
+   ```
+
+2. **Authenticate**:
+   ```bash
+   gcloud auth login
+   ```
+
+3. **Create `cors.json` file** in your project root:
+   ```json
+   [
+     {
+       "origin": ["http://localhost:3000", "https://your-project.vercel.app"],
+       "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+       "maxAgeSeconds": 3600
+     }
+   ]
+   ```
+   Replace `your-project.vercel.app` with your actual Vercel domain.
+
+4. **Apply CORS config** to your Firebase Storage bucket:
+   ```bash
+   gsutil cors set cors.json gs://your-project-id.appspot.com
+   ```
+   Replace `your-project-id` with your Firebase project ID.
+
+5. **Verify CORS is set**:
+   ```bash
+   gsutil cors get gs://your-project-id.appspot.com
+   ```
+
+**Note**: This is required for both local development and production. Add all domains you'll deploy to.
+
+### Issue: Firebase Storage "retry-limit-exceeded" or timeouts
+**Symptoms**:
+```
+FirebaseError: Firebase Storage: Max retry time for operation exceeded
+```
+
+**Root Cause**: Either incorrect bucket configuration or Storage rules blocking the operation.
+
+**Solution**:
+
+1. **Fix Storage Bucket Variable**:
+   - Ensure `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` is set to the bucket name format:
+     ```
+     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+     ```
+   - ❌ **NOT** the download host: `your-project-id.firebasestorage.app`
+   - ❌ **NOT** a full URL: `https://firebasestorage.googleapis.com/...`
+
+2. **Configure Storage Security Rules**:
+   - Go to Firebase Console → Storage → Rules
+   - Add rules to allow authenticated uploads/downloads:
+   
+   ```javascript
+   rules_version = '2';
+   service firebase.storage {
+     match /b/{bucket}/o {
+       // Allow authenticated users to upload stencils to their own folder
+       match /stencils/{userId}/{allPaths=**} {
+         allow read: if request.auth != null;
+         allow write: if request.auth != null && request.auth.uid == userId;
+       }
+       
+       // Allow authenticated users to upload public covers
+       match /publicCovers/{userId}.{extension} {
+         allow read: if true;  // Public read
+         allow write: if request.auth != null && request.auth.uid == userId;
+       }
+       
+       // Default: deny all other access
+       match /{allPaths=**} {
+         allow read, write: if false;
+       }
+     }
+   }
+   ```
+
+3. **Publish the rules** and test uploading a stencil.
+
+4. **If still failing**, check browser console for specific error codes:
+   - `403`: Rules are blocking you → adjust rules
+   - `CORS`: See CORS solution above
+   - `Network error`: Check bucket name format
 
 ## Environment-Specific Variables
 
