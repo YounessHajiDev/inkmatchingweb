@@ -11,13 +11,32 @@ export default function MapArtists({ artists, onSelect }: { artists: ArtistWithP
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
-    map.current = new maplibregl.Map({
+    const m = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://demotiles.maplibre.org/style.json',
       center: [-73.5673, 45.5017],
       zoom: 10,
     })
-    return () => { map.current?.remove(); map.current = null }
+    // Swallow AbortError emitted by MapLibre when tearing down during pending fetches
+    m.on('error', (e: any) => {
+      const name = e?.error?.name || e?.name
+      if (name === 'AbortError') return
+      // Log unexpected map errors for diagnostics
+      console.warn('[MapLibre] error event:', e)
+    })
+    map.current = m
+
+    return () => {
+      try {
+        if (map.current) map.current.remove()
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          console.warn('[MapLibre] cleanup error:', err)
+        }
+      } finally {
+        map.current = null
+      }
+    }
   }, [])
 
   useEffect(() => {
