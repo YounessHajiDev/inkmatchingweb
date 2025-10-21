@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
-import { addEvent, deleteEvent, listEvents, type CalendarEvent } from '@/lib/calendar'
+import { addEvent, deleteEvent, listEvents, type LegacyCalendarEvent } from '@/lib/calendar'
 import { getPublicProfile } from '@/lib/publicProfiles'
 import { listBookingsForArtist } from '@/lib/bookings'
 import type { Booking, UserRole } from '@/types'
 
 export default function CalendarPage() {
   const { user, loading } = useAuth()
-  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [events, setEvents] = useState<LegacyCalendarEvent[]>([])
   const [form, setForm] = useState({ title: '', dateISO: '', time: '', note: '' })
   const [busy, setBusy] = useState(false)
   const [role, setRole] = useState<UserRole | null>(null)
