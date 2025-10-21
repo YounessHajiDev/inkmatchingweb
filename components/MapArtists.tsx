@@ -26,8 +26,20 @@ export default function MapArtists({ artists, onSelect }: { artists: ArtistWithP
     })
     map.current = m
 
+    // In dev, Next.js overlays unhandled promise rejections. Map teardown can abort fetches
+    // and surface DOMException: AbortError. Suppress just these while the map exists.
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason: any = event.reason
+      const name = reason?.name || reason?.error?.name
+      if (name === 'AbortError') {
+        event.preventDefault()
+      }
+    }
+    window.addEventListener('unhandledrejection', onUnhandledRejection)
+
     return () => {
       try {
+        window.removeEventListener('unhandledrejection', onUnhandledRejection)
         if (map.current) map.current.remove()
       } catch (err: any) {
         if (err?.name !== 'AbortError') {

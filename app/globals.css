@@ -1,3 +1,21 @@
+/* Stronger glassy glow for cards */
+.shadow-glow-xl {
+  box-shadow: 0 4px 48px 0 rgba(36,209,247,0.18), 0 2px 16px 0 rgba(124,92,255,0.16);
+}
+
+/* Subtle drop shadow for text */
+.drop-shadow-glow {
+  text-shadow: 0 2px 8px rgba(36,209,247,0.18), 0 1px 2px rgba(124,92,255,0.13);
+}
+
+/* Animate slow pulse for accent bg */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 6s cubic-bezier(0.4,0,0.6,1) infinite;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
