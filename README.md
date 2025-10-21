@@ -107,3 +107,30 @@ See file tree in this repository.
 - Next/Image is configured to allow any https remote images.
 - DM thread IDs are stable: `dm_{lowerUid}___{higherUid}`.
 - A lead is auto-created when a **client** sends the first message to an **artist** in a new DM thread.
+
+## Firebase Storage CORS (fix 403/CORS from Vercel)
+
+If you see errors like "CORS policy: Response to preflight request doesn't pass access control check" or uploads failing from your Vercel preview URLs, set the CORS configuration on your Firebase Storage bucket.
+
+1) Ensure your Storage bucket matches the expected format: `<projectId>.appspot.com`. Our client normalizes the value from `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, but the actual bucket in Firebase should be e.g. `superapp-699a9.appspot.com`.
+
+2) Use the provided `storage.cors.json` and apply it with `gsutil`:
+
+```bash
+# Install gcloud + gsutil if you don't have it
+# https://cloud.google.com/sdk/docs/install
+
+gcloud auth login
+gcloud config set project $YOUR_PROJECT_ID
+
+# Apply CORS to your bucket (replace the bucket name)
+gsutil cors set storage.cors.json gs://superapp-699a9.appspot.com
+
+# Verify
+gsutil cors get gs://superapp-699a9.appspot.com
+```
+
+The included config allows localhost and Vercel preview/prod origins. For production hardening, replace `"*"` with your exact domain(s).
+
+## Favicon
+We've added a minimal `app/icon.svg` so you won't see 404s for `favicon.ico` anymore. Next.js will serve the SVG as the app icon automatically.
