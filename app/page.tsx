@@ -12,6 +12,29 @@ export default function DiscoverPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNearMe, setShowNearMe] = useState(false)
+  const [selectedCity, setSelectedCity] = useState<string | null>(null)
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null)
+  const [selectedRating, setSelectedRating] = useState<number | null>(null)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
+  const [showFiltersModal, setShowFiltersModal] = useState(false)
+  const [showSortModal, setShowSortModal] = useState(false)
+
+  // Get unique cities and styles from artists
+  const cities = useMemo(() => {
+    const uniqueCities = Array.from(new Set(artists.map(a => a.city).filter(Boolean)))
+    return uniqueCities.sort()
+  }, [artists])
+
+  const styles = useMemo(() => {
+    const allStyles = artists.flatMap(a => 
+      typeof a.styles === 'string' 
+        ? a.styles.split(',').map(s => s.trim()) 
+        : Array.isArray(a.styles) 
+          ? a.styles 
+          : []
+    ).filter(Boolean)
+    return Array.from(new Set(allStyles)).sort()
+  }, [artists])
 
   useEffect(() => {
     const loadArtists = async () => {
@@ -28,22 +51,126 @@ export default function DiscoverPage() {
     loadArtists()
   }, [])
 
+  // Get user location when "Near me" is enabled
   useEffect(() => {
-    if (!search.trim()) { setFilteredArtists(artists); return }
-    const query = search.toLowerCase()
-    const filtered = artists.filter((artist) =>
-      artist.displayName.toLowerCase().includes(query) ||
-      artist.city.toLowerCase().includes(query) ||
-      artist.normalizedStyles.toLowerCase().includes(query)
-    )
+    if (showNearMe && !userLocation) {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+            })
+          },
+          (error) => {
+            console.error('Error getting location:', error)
+            alert('Unable to get your location. Please enable location services.')
+            setShowNearMe(false)
+          }
+        )
+      } else {
+        alert('Geolocation is not supported by your browser.')
+        setShowNearMe(false)
+      }
+    }
+  }, [showNearMe, userLocation])
+
+  // Apply all filters
+  useEffect(() => {
+    let filtered = [...artists]
+
+    // Search filter
+    if (search.trim()) {
+      const query = search.toLowerCase()
+      filtered = filtered.filter((artist) =>
+        artist.displayName.toLowerCase().includes(query) ||
+        artist.city.toLowerCase().includes(query) ||
+        artist.normalizedStyles.toLowerCase().includes(query)
+      )
+    }
+
+    // City filter
+    if (selectedCity) {
+      filtered = filtered.filter(artist => artist.city === selectedCity)
+    }
+
+    // Style filter
+    if (selectedStyle) {
+      filtered = filtered.filter(artist => {
+        const artistStyles = typeof artist.styles === 'string' 
+          ? artist.styles.split(',').map(s => s.trim()) 
+          : Array.isArray(artist.styles) 
+            ? artist.styles 
+            : []
+        return artistStyles.some(style => 
+          style.toLowerCase().includes(selectedStyle.toLowerCase())
+        )
+      })
+    }
+
+    // Rating filter
+    if (selectedRating !== null) {
+      filtered = filtered.filter(artist => 
+        typeof artist.rating === 'number' && artist.rating >= selectedRating
+      )
+    }
+
+    // Near me filter (sort by distance)
+    if (showNearMe && userLocation) {
+      filtered = filtered
+        .map(artist => {
+          const lat = artist.latitude ?? artist.lat ?? 0
+          const lon = artist.longitude ?? artist.lng ?? 0
+          const distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lon,
+            lat,
+            lon
+          )
+          return { ...artist, distance }
+        })
+        .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
+        .slice(0, 20) // Show closest 20 artists
+    }
+
     setFilteredArtists(filtered)
-  }, [search, artists])
+  }, [search, artists, selectedCity, selectedStyle, selectedRating, showNearMe, userLocation])
+
+  // Calculate distance between two coordinates (Haversine formula)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371 // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180
+    const dLon = ((lon2 - lon1) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
 
   const filterChips = useMemo(() => ([
-    { label: 'All cities', icon: <MapLabelIcon key="city" /> },
-    { label: 'All styles', icon: <PenNibIcon key="style" /> },
-    { label: 'Any rating', icon: <StarIcon key="rating" className="h-4 w-4" /> },
-  ]), [])
+    { 
+      label: selectedCity || 'All cities', 
+      icon: <MapLabelIcon key="city" />,
+      onClick: () => setShowFiltersModal(true),
+      active: !!selectedCity,
+    },
+    { 
+      label: selectedStyle || 'All styles', 
+      icon: <PenNibIcon key="style" />,
+      onClick: () => setShowFiltersModal(true),
+      active: !!selectedStyle,
+    },
+    { 
+      label: selectedRating ? `${selectedRating}+ stars` : 'Any rating', 
+      icon: <StarIcon key="rating" className="h-4 w-4" />,
+      onClick: () => setShowFiltersModal(true),
+      active: selectedRating !== null,
+    },
+  ]), [selectedCity, selectedStyle, selectedRating])
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-12">
@@ -82,11 +209,22 @@ export default function DiscoverPage() {
               />
             </div>
             <div className="flex items-center gap-3 sm:w-auto">
-              <button className="btn btn-secondary group border-white/10 bg-white/[0.05] shadow-md transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg">
+              <button 
+                onClick={() => setShowFiltersModal(true)}
+                className="btn btn-secondary group border-white/10 bg-white/[0.05] shadow-md transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg"
+              >
                 <FunnelIcon className="h-5 w-5 transition group-hover:scale-110" />
                 Filters
+                {(selectedCity || selectedStyle || selectedRating !== null) && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink-accent text-xs font-bold text-white">
+                    {[selectedCity, selectedStyle, selectedRating].filter(Boolean).length}
+                  </span>
+                )}
               </button>
-              <button className="btn btn-secondary group border-white/10 bg-white/[0.05] shadow-md transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg">
+              <button 
+                onClick={() => setShowSortModal(true)}
+                className="btn btn-secondary group border-white/10 bg-white/[0.05] shadow-md transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg"
+              >
                 <AdjustmentsHorizontalIcon className="h-5 w-5 transition group-hover:scale-110" />
                 Sort
               </button>
@@ -96,14 +234,30 @@ export default function DiscoverPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2">
               {filterChips.map((chip, idx) => (
-                <span 
-                  key={chip.label} 
-                  className="chip border-white/10 bg-white/[0.05] shadow-md backdrop-blur-sm transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg"
+                <button
+                  key={chip.label}
+                  onClick={chip.onClick}
+                  className={`chip border-white/10 shadow-md backdrop-blur-sm transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg ${
+                    chip.active ? 'border-ink-accent/40 bg-ink-accent/10 text-white' : 'bg-white/[0.05]'
+                  }`}
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   {chip.icon}
                   {chip.label}
-                </span>
+                  {chip.active && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (chip.label.includes('cities')) setSelectedCity(null)
+                        else if (chip.label.includes('styles')) setSelectedStyle(null)
+                        else if (chip.label.includes('stars')) setSelectedRating(null)
+                      }}
+                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-xs hover:bg-white/30"
+                    >
+                      ×
+                    </span>
+                  )}
+                </button>
               ))}
             </div>
             <button
@@ -155,7 +309,100 @@ export default function DiscoverPage() {
           ))}
         </div>
       )}
+
+      {/* Filters Modal */}
+      {showFiltersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShowFiltersModal(false)}>
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-ink-panel p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">Filters</h2>
+              <button onClick={() => setShowFiltersModal(false)} className="btn-icon-secondary">
+                <CloseIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* City Filter */}
+              <div>
+                <label className="label">City</label>
+                <select 
+                  value={selectedCity || ''} 
+                  onChange={(e) => setSelectedCity(e.target.value || null)}
+                  className="input w-full"
+                >
+                  <option value="">All cities</option>
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Style Filter */}
+              <div>
+                <label className="label">Style</label>
+                <select 
+                  value={selectedStyle || ''} 
+                  onChange={(e) => setSelectedStyle(e.target.value || null)}
+                  className="input w-full"
+                >
+                  <option value="">All styles</option>
+                  {styles.map(style => (
+                    <option key={style} value={style}>{style}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Rating Filter */}
+              <div>
+                <label className="label">Minimum Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(rating => (
+                    <button
+                      key={rating}
+                      onClick={() => setSelectedRating(selectedRating === rating ? null : rating)}
+                      className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                        selectedRating === rating
+                          ? 'border-ink-accent bg-ink-accent/20 text-white'
+                          : 'border-white/10 bg-white/5 text-ink-text-muted hover:border-ink-accent/40 hover:text-white'
+                      }`}
+                    >
+                      {rating}+
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={() => {
+                    setSelectedCity(null)
+                    setSelectedStyle(null)
+                    setSelectedRating(null)
+                  }}
+                  className="btn btn-secondary flex-1"
+                >
+                  Clear all
+                </button>
+                <button 
+                  onClick={() => setShowFiltersModal(false)}
+                  className="btn btn-primary flex-1"
+                >
+                  Apply filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function CloseIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
   )
 }
 
