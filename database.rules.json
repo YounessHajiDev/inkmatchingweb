@@ -1,47 +1,210 @@
 {
   "rules": {
-    "/": {
-      ".read": false,
-      ".write": false
-    },
+    ".read": false,
+    ".write": false,
 
     "publicProfiles": {
       ".read": true,
+      ".indexOn": ["role"],
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && auth.uid == $uid",
+        "role":        { ".validate": "newData.isString() || newData.val() == null" },
+        "isPublic":    { ".validate": "newData.isBoolean() || newData.val() == null" },
+        "displayName": { ".validate": "newData.isString() || newData.val() == null" },
+        "city":        { ".validate": "newData.isString() || newData.val() == null" },
+        "styles":      { ".validate": "newData.isString() || newData.hasChildren() || newData.val() == null" },
+        "rating":      { ".validate": "newData.isNumber() || newData.val() == null" },
+        "coverURL":    { ".validate": "newData.isString() || newData.val() == null" },
+        "photoURL":    { ".validate": "newData.isString() || newData.val() == null" },
+        "latitude":    { ".validate": "newData.isNumber() || newData.val() == null" },
+        "longitude":   { ".validate": "newData.isNumber() || newData.val() == null" }
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read":  "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid",
+        "role":        { ".validate": "newData.val() == 'artist' || newData.val() == 'client'" },
+        "email":       { ".validate": "newData.isString() || newData.val() == null" },
+        "displayName": { ".validate": "newData.isString() || newData.val() == null" },
+        "photoURL":    { ".validate": "newData.isString() || newData.val() == null" },
+        "createdAt":   { ".validate": "newData.isNumber() || newData.val() == null" },
+        "updatedAt":   { ".validate": "newData.isNumber() || newData.val() == null" }
       }
     },
 
     "threads": {
       "$threadId": {
-        ".read": "auth != null && data.child('members/' + auth.uid).val() === true",
-        ".write": "auth != null && (data.child('members/' + auth.uid).val() === true || newData.child('members/' + auth.uid).val() === true)"
+        ".read":  "auth != null && data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && (data.child('members').child(auth.uid).exists() || (!data.exists() && newData.child('members').child(auth.uid).exists()))",
+        "members":   { ".validate": "newData.hasChildren()" },
+        "type":      { ".validate": "newData.val() == 'dm' || newData.val() == 'group' || newData.val() == null" },
+        "createdAt": { ".validate": "newData.isNumber() || newData.val() == null" }
       }
     },
 
     "messages": {
       "$threadId": {
-        ".read": "auth != null && root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true",
+        ".read": "auth != null && root.child('threads').child($threadId).child('members').child(auth.uid).exists()",
         "$messageId": {
-          ".write": "auth != null && (root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true || newData.root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true)"
+          ".write": "auth != null && newData.child('senderId').val() == auth.uid && (root.child('threads').child($threadId).child('members').child(auth.uid).exists() || newData.parent().parent().parent().child('threads').child($threadId).child('members').child(auth.uid).exists())",
+          ".validate": "newData.hasChildren(['id','senderId','createdAt','kind'])",
+          "id":        { ".validate": "newData.isString()" },
+          "senderId":  { ".validate": "newData.isString() && newData.val() == auth.uid" },
+          "createdAt": { ".validate": "newData.isNumber()" },
+          "kind":      { ".validate": "newData.isString() && newData.val().matches(/^(text|image|location|system)$/)" },
+          "text":      { ".validate": "newData.val() == null || (newData.isString() && newData.parent().child('kind').val() == 'text')" },
+          "location":  { ".validate": "newData.val() == null || (newData.parent().child('kind').val() == 'location' && newData.hasChildren(['latitude','longitude']) && newData.child('latitude').isNumber() && newData.child('longitude').isNumber())" },
+          "attachments": {
+            "$i": {
+              ".validate": "newData.parent().parent().child('kind').val() == 'image'",
+              "id":  { ".validate": "newData.isString() || newData.val() == null" },
+              "url": { ".validate": "newData.isString() || newData.val() == null" },
+              "w":   { ".validate": "newData.isNumber() || newData.val() == null" },
+              "h":   { ".validate": "newData.isNumber() || newData.val() == null" }
+            }
+          }
         }
       }
     },
 
     "userThreads": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["updatedAt"],
         "$threadId": {
-          ".write": "auth != null && (auth.uid === $uid || root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true || newData.root.child('threads/' + $threadId + '/members/' + auth.uid).val() === true)"
+          ".write": "auth != null && (newData.parent().parent().parent().child('threads').child($threadId).child('members').child(auth.uid).exists() || root.child('threads').child($threadId).child('members').child(auth.uid).exists()) && (newData.parent().parent().parent().child('threads').child($threadId).child('members').child($uid).exists() || root.child('threads').child($threadId).child('members').child($uid).exists())",
+          "updatedAt":   { ".validate": "newData.isNumber() || newData.val() == null" },
+          "lastMessage": { ".validate": "newData.isString() || newData.val() == null" },
+          "unreadCount": { ".validate": "newData.isNumber() || newData.val() == null" },
+          "members":     { ".validate": "newData.hasChildren()" }
         }
       }
     },
 
     "leadsByArtist": {
-      "$artistUid": {
-        ".read": "auth != null && auth.uid === $artistUid",
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["status", "createdAt", "clientId"],
         "$leadId": {
-          ".write": "auth != null" 
+          ".write": "auth != null && (auth.uid == $uid || (!data.exists() && newData.child('clientId').val() == auth.uid))",
+          ".validate": "newData.hasChildren(['clientId','clientName','message','style','city','createdAt','status'])",
+          "clientId":    { ".validate": "newData.isString()" },
+          "clientName":  { ".validate": "newData.isString()" },
+          "message":     { ".validate": "newData.isString()" },
+          "style":       { ".validate": "newData.isString()" },
+          "city":        { ".validate": "newData.isString()" },
+          "createdAt":   { ".validate": "newData.isNumber()" },
+          "status":      { ".validate": "newData.isString() && newData.val().matches(/^(new|accepted|declined|archived)$/)" },
+          "internalNote":{ ".validate": "newData.isString() || newData.val() == null" },
+          "quotedPrice": { ".validate": "newData.isNumber() || newData.val() == null" },
+          "currency":    { ".validate": "newData.isString() || newData.val() == null" },
+          "updatedAt":   { ".validate": "newData.isNumber() || newData.val() == null" }
+        }
+      }
+    },
+
+    "leadsByClient": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["createdAt", "status"],
+        "$leadId": {
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['clientId','clientName','message','style','city','createdAt','status'])",
+          "clientId":   { ".validate": "newData.isString() && newData.val() == $uid" },
+          "clientName": { ".validate": "newData.isString()" },
+          "message":    { ".validate": "newData.isString()" },
+          "style":      { ".validate": "newData.isString()" },
+          "city":       { ".validate": "newData.isString()" },
+          "createdAt":  { ".validate": "newData.isNumber()" },
+          "status":     { ".validate": "newData.isString() && newData.val().matches(/^(new|accepted|declined|archived)$/)" },
+          "artistUid":  { ".validate": "newData.isString() || newData.val() == null" },
+          "threadId":   { ".validate": "newData.isString() || newData.val() == null" },
+          "updatedAt":  { ".validate": "newData.isNumber() || newData.val() == null" }
+        }
+      }
+    },
+
+    "appointmentsByArtist": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["startsAt"],
+        "$id": {
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['title','startsAt','endsAt'])",
+          "title":    { ".validate": "newData.isString()" },
+          "note":     { ".validate": "newData.isString() || newData.val() == null" },
+          "startsAt": { ".validate": "newData.isNumber()" },
+          "endsAt":   { ".validate": "newData.isNumber() && newData.val() >= newData.parent().child('startsAt').val()" },
+          "place":    { ".validate": "newData.isString() || newData.val() == null" },
+          "latitude": { ".validate": "newData.isNumber() || newData.val() == null" },
+          "longitude":{ ".validate": "newData.isNumber() || newData.val() == null" }
+        }
+      }
+    },
+
+    "stencilsByUser": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["createdAt"],
+        "$id": {
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['name','downloadURL','createdAt'])",
+          "name":        { ".validate": "newData.isString()" },
+          "downloadURL": { ".validate": "newData.isString()" },
+          "createdAt":   { ".validate": "newData.isNumber()" }
+        }
+      }
+    },
+
+    "aftercareTemplatesByArtist": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["createdAt"],
+        "$tplId": {
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['name','createdAt','steps'])",
+          "name":      { ".validate": "newData.isString()" },
+          "createdAt": { ".validate": "newData.isNumber()" },
+          "steps": {
+            "$i": {
+              ".validate": "newData.hasChildren(['id','dayOffset','title'])",
+              "id":        { ".validate": "newData.isString()" },
+              "dayOffset": { ".validate": "newData.isNumber()" },
+              "title":     { ".validate": "newData.isString()" },
+              "body":      { ".validate": "newData.isString() || newData.val() == null" },
+              "icon":      { ".validate": "newData.isString() || newData.val() == null" }
+            }
+          }
+        }
+      }
+    },
+
+    "aftercarePlansByUser": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".indexOn": ["startDate"],
+        "$planId": {
+          ".write": "auth != null && (auth.uid == $uid || auth.uid == newData.child('artistUid').val())",
+          ".validate": "newData.hasChildren(['artistUid','clientUid','templateName','startDate','steps']) && newData.child('clientUid').val() == $uid",
+          "artistUid":    { ".validate": "newData.isString()" },
+          "clientUid":    { ".validate": "newData.isString() && newData.val() == $uid" },
+          "templateName": { ".validate": "newData.isString()" },
+          "startDate":    { ".validate": "newData.isNumber()" },
+          "steps": {
+            "$i": {
+              ".validate": "newData.hasChildren(['id','dayOffset','title'])",
+              "id":        { ".validate": "newData.isString()" },
+              "dayOffset": { ".validate": "newData.isNumber()" },
+              "title":     { ".validate": "newData.isString()" },
+              "body":      { ".validate": "newData.isString() || newData.val() == null" },
+              "icon":      { ".validate": "newData.isString() || newData.val() == null" }
+            }
+          },
+          "completed": {
+            "$offset": { ".validate": "newData.isNumber()" }
+          }
         }
       }
     }

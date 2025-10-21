@@ -41,44 +41,22 @@ Fill in `.env.local` with your Firebase web credentials.
 ### 3. Firebase Security Rules (reference)
 
 **Realtime Database Rules**
-```json
-{
-  "rules": {
-    "publicProfiles": {
-      "$uid": {
-        ".read": true,
-        ".write": "$uid === auth.uid"
-      }
-    },
-    "threads": {
-      "$threadId": {
-        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
-        ".write": "auth != null && data.child('members').child(auth.uid).exists()"
-      }
-    },
-    "messages": {
-      "$threadId": {
-        ".read": "auth != null && root.child('threads').child($threadId).child('members').child(auth.uid).exists()",
-        ".write": "auth != null && root.child('threads').child($threadId).child('members').child(auth.uid).exists()"
-      }
-    },
-    "userThreads": {
-      "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid"
-      }
-    },
-    "leadsByArtist": {
-      "$artistUid": {
-        ".read": "$artistUid === auth.uid",
-        "$leadId": {
-          ".write": "$artistUid === auth.uid || data.child('clientId').val() === auth.uid"
-        }
-      }
-    }
-  }
-}
-```
+
+The project includes comprehensive security rules in `database.rules.json` covering:
+- **publicProfiles**: Public read, owner write with field validation
+- **users**: Private user profiles (role, email, etc.)
+- **threads & messages**: Secure DM/group chat with member validation
+- **userThreads**: Per-user inbox with unread counts
+- **leadsByArtist & leadsByClient**: Lead management with status workflow
+- **appointmentsByArtist**: Calendar events with time validation
+- **stencilsByUser**: User-uploaded stencil storage metadata
+- **aftercareTemplatesByArtist & aftercarePlansByUser**: Post-tattoo care workflows
+
+See `database.rules.json` for the complete ruleset with `.validate` constraints on all fields.
+
+To apply these rules:
+- In Firebase Console → Realtime Database → Rules, paste the JSON above and Publish; or
+- Use Firebase CLI with a firebase.json that points to database.rules.json and run: firebase deploy --only database.
 
 **Storage Rules**
 ```
