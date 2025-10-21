@@ -3,18 +3,15 @@ import { getAuth } from 'firebase/auth'
 import { getDatabase } from 'firebase/database'
 import { getStorage } from 'firebase/storage'
 
-// Some users mistakenly paste a Firebase Storage download host (.firebasestorage.app) or a full URL into storageBucket.
-// The SDK expects the bucket name only, typically `${projectId}.appspot.com`.
+// storageBucket expects a bucket name (not a full URL). Valid defaults are typically
+// `${projectId}.appspot.com` (legacy) OR `${projectId}.firebasestorage.app` (newer).
+// We accept both without forced conversion.
 const rawBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || ''
 
 function normalizeBucket(input: string): string | undefined {
   if (!input) return undefined
-  // If it's already a bucket name, pass through
-  if (/^[a-z0-9\-]+\.appspot\.com$/i.test(input)) return input
-  // If user pasted the .firebasestorage.app host, convert to .appspot.com preserving the prefix
-  if (/\.firebasestorage\.app$/i.test(input)) {
-    return input.replace(/\.firebasestorage\.app$/i, '.appspot.com')
-  }
+  // If it's already a bucket name (either scheme), pass through
+  if (/^[a-z0-9\-]+\.(appspot\.com|firebasestorage\.app)$/i.test(input)) return input
   // If user pasted a googleapis URL, try to extract the bucket after "/b/"
   const bIdx = input.indexOf('/b/')
   if (bIdx !== -1) {
