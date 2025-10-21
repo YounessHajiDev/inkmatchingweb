@@ -130,7 +130,20 @@ gsutil cors set storage.cors.json gs://superapp-699a9.appspot.com
 gsutil cors get gs://superapp-699a9.appspot.com
 ```
 
-The included config allows localhost and Vercel preview/prod origins. For production hardening, replace `"*"` with your exact domain(s).
+The included `storage.cors.json` allows localhost and Vercel preview/prod (uses `"*"` so all preview subdomains work).
+
+When you’re ready to lock down to your primary domain, use `storage.cors.prod.json` which is restricted to:
+- https://inkmatching.com
+- https://www.inkmatching.com
+- http://localhost:3000 and http://localhost:3001 (for local dev)
+
+Apply the production policy:
+```bash
+gsutil cors set storage.cors.prod.json gs://superapp-699a9.firebasestorage.app
+gsutil cors get gs://superapp-699a9.firebasestorage.app
+```
+
+Tip: Firebase Authentication also needs your custom domain whitelisted. In Firebase Console → Authentication → Settings → Authorized domains, add `inkmatching.com` and `www.inkmatching.com`.
 
 ## Favicon
 We've added a minimal `app/icon.svg` so you won't see 404s for `favicon.ico` anymore. Next.js will serve the SVG as the app icon automatically.
