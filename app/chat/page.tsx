@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
+import { useUserRole } from '@/hooks/useUserRole'
 import { subscribeToUserThreads, deleteChatForUser } from '@/lib/realtime'
 import { getPublicProfile } from '@/lib/publicProfiles'
 import type { PublicProfile, UserThread } from '@/types'
@@ -11,6 +12,7 @@ import { MagnifyingGlassIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/ou
 
 export default function ChatLandingPage() {
   const { user, loading } = useAuth()
+  const { role } = useUserRole()
   const router = useRouter()
   const [threads, setThreads] = useState<UserThread[]>([])
   const [profiles, setProfiles] = useState<Record<string, PublicProfile>>({})
@@ -85,12 +87,21 @@ export default function ChatLandingPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-ink-text-muted">Chat</p>
-              <h1 className="text-3xl font-semibold text-white sm:text-4xl">Stay in sync with your artists</h1>
-              <p className="mt-2 max-w-2xl text-sm text-ink-text-muted">Every conversation and update lives here. No DMs, no lost context—InkMatching keeps both sides aligned.</p>
+              <h1 className="text-3xl font-semibold text-white sm:text-4xl">
+                {role === 'artist' ? 'Client Messages' : 'Stay in sync with your artists'}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-ink-text-muted">
+                {role === 'artist' 
+                  ? 'View messages from your clients. Reply to inquiries and keep conversations organized.'
+                  : 'Every conversation and update lives here. No DMs, no lost context—InkMatching keeps both sides aligned.'
+                }
+              </p>
             </div>
-            <Link href="/leads" className="btn btn-secondary">
-              Leads inbox
-            </Link>
+            {role === 'artist' && (
+              <Link href="/leads" className="btn btn-secondary">
+                Leads inbox
+              </Link>
+            )}
           </div>
 
           <div className="relative">
@@ -113,23 +124,32 @@ export default function ChatLandingPage() {
             <ChatBubbleIcon className="h-12 w-12 text-white/70" />
             <div>
               <h2 className="text-2xl font-semibold text-white">No conversations yet</h2>
-              <p className="mt-2 text-sm text-ink-text-muted">Start a chat from an artist profile or booking request to keep everything in one place.</p>
+              <p className="mt-2 text-sm text-ink-text-muted">
+                {role === 'artist' 
+                  ? 'When clients message you through the platform, their conversations will appear here.'
+                  : 'Start a chat from an artist profile or booking request to keep everything in one place.'
+                }
+              </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/" className="btn btn-secondary">
-                Discover artists
-              </Link>
-              <Link href="/map" className="btn btn-primary">
-                Start a new chat
-              </Link>
-            </div>
+            {role !== 'artist' && (
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link href="/" className="btn btn-secondary">
+                  Discover artists
+                </Link>
+                <Link href="/map" className="btn btn-primary">
+                  Explore map
+                </Link>
+              </div>
+            )}
           </div>
-          <Link
-            href="/chat/new"
-            className="absolute bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-ink-button text-white shadow-glow transition hover:scale-[1.02]"
-          >
-            <PlusIcon className="h-6 w-6" />
-          </Link>
+          {role !== 'artist' && (
+            <Link
+              href="/chat/new"
+              className="absolute bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-ink-button text-white shadow-glow transition hover:scale-[1.02]"
+            >
+              <PlusIcon className="h-6 w-6" />
+            </Link>
+          )}
         </div>
       ) : (
         <div className="mt-10 divide-y divide-white/5 overflow-hidden rounded-4xl border border-white/10 bg-white/[0.03] shadow-glow-soft backdrop-blur-md">
