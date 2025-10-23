@@ -15,18 +15,19 @@ type Props = {
  */
 export default function InkTrailCanvas({
   className,
-  skinColor = '#F7EFE7', // warm, light skin tone
+  skinColor = '#000000', // unused when alpha canvas
   inkColor = 'rgba(10,10,10,0.95)',
-  fadeAlpha = 0.04, // slower fade for persistent thin lines
+  fadeAlpha = 0.16, // faster fade out as requested
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const mouseRef = useRef({ x: -9999, y: -9999, vx: 0, vy: 0 })
   const rafRef = useRef<number | null>(null)
   const lastRef = useRef<number>(0)
+  const hueRef = useRef(0)
 
   useEffect(() => {
     const canvas = canvasRef.current!
-    const ctx = canvas.getContext('2d', { alpha: false })!
+  const ctx = canvas.getContext('2d', { alpha: true })!
 
     const resize = () => {
       const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1))
@@ -37,9 +38,8 @@ export default function InkTrailCanvas({
       canvas.style.width = `${w}px`
       canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      // repaint background on resize
-      ctx.fillStyle = skinColor
-      ctx.fillRect(0, 0, w, h)
+  // transparent canvas over app background
+  ctx.clearRect(0, 0, w, h)
     }
 
     resize()
@@ -58,29 +58,28 @@ export default function InkTrailCanvas({
     }
     window.addEventListener('pointermove', onMove)
 
-    // Initial paint
-    ctx.fillStyle = skinColor
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+  // Start transparent so underlying app background shows
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     const splat = (x: number, y: number, pressure: number) => {
-      // Thin, realistic tattoo needle line with subtle bleeding
-      ctx.globalCompositeOperation = 'darken'
-      
-      // Main thin line with sharp opacity
-      ctx.fillStyle = inkColor
-      const lineWidth = 1.2 + pressure * 0.6 // Very thin: 1.2-1.8px
+      // Rainbow ink dot with minimal bleed
+      const hue = hueRef.current % 360
+      const color = `hsl(${hue}, 90%, 55%)`
+
+      // Main thin dot
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = color
+      const lineWidth = 1.1 + pressure * 0.5 // ~1.1-1.6px
       ctx.beginPath()
       ctx.arc(x, y, lineWidth, 0, Math.PI * 2)
       ctx.fill()
-      
-      // Subtle ink bleeding (minimal)
-      ctx.fillStyle = 'rgba(10,10,10,0.15)'
-      const bleedRadius = lineWidth + 0.8
+
+      // Minimal soft edge
+      ctx.fillStyle = `hsla(${hue}, 90%, 55%, 0.18)`
+      const bleedRadius = lineWidth + 0.7
       ctx.beginPath()
       ctx.arc(x, y, bleedRadius, 0, Math.PI * 2)
       ctx.fill()
-      
-      ctx.globalCompositeOperation = 'source-over'
     }
 
     const loop = (t: number) => {
@@ -91,18 +90,18 @@ export default function InkTrailCanvas({
       const w = canvas.clientWidth
       const h = canvas.clientHeight
 
-      // subtle fade to skin tone to slowly erase old ink
-      ctx.fillStyle = skinColor
-      ctx.globalAlpha = fadeAlpha
-      ctx.fillRect(0, 0, w, h)
-      ctx.globalAlpha = 1
+  // Fast fade using destination-out to increase transparency of existing ink
+  ctx.globalCompositeOperation = 'destination-out'
+  ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`
+  ctx.fillRect(0, 0, w, h)
+  ctx.globalCompositeOperation = 'source-over'
 
       const { x, y, vx, vy } = mouseRef.current
       if (x > -1000) {
         const speed = Math.hypot(vx, vy)
         // Thin, continuous line like a tattoo needle
         // More interpolation points for smooth, connected line
-        const steps = Math.max(2, Math.ceil(speed / 2))
+        const steps = Math.max(3, Math.ceil(speed / 1.8))
         for (let i = 0; i < steps; i++) {
           const t = i / steps
           const ix = x - (vx * t)
@@ -111,6 +110,8 @@ export default function InkTrailCanvas({
           const pressure = Math.min(1, 0.4 + speed * 0.02)
           splat(ix, iy, pressure)
         }
+        // advance hue based on speed for dynamic rainbow
+        hueRef.current = (hueRef.current + Math.max(0.6, speed * 0.15)) % 360
       }
 
       rafRef.current = requestAnimationFrame(loop)
