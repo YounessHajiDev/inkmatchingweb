@@ -5,6 +5,8 @@ export type LeadStatus = 'new' | 'accepted' | 'declined' | 'archived'
 export type BookingStatus = 'pending' | 'accepted' | 'declined' | 'cancelled' | 'completed'
 export type PaymentStatus = 'not_required' | 'pending' | 'requires_action' | 'succeeded' | 'cancelled'
 export type AftercareStatus = 'active' | 'completed' | 'archived'
+export type SubscriptionTier = 'free' | 'pro' | 'premium'
+export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'trialing'
 
 export interface PublicProfile {
   uid: string
@@ -21,6 +23,15 @@ export interface PublicProfile {
   lat?: number // legacy
   lng?: number // legacy
   rating?: number
+  // Subscription fields
+  subscriptionTier?: SubscriptionTier
+  subscriptionStatus?: SubscriptionStatus
+  subscriptionStartDate?: number
+  subscriptionEndDate?: number
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+  aiCreditsUsed?: number // resets monthly
+  aiCreditsResetDate?: number
 }
 
 export interface Thread {

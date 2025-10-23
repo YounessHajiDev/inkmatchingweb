@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, deleteUser } from 'firebase/auth'
-import { ArrowLeftIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/outline'
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
+import { ArrowLeftIcon, XMarkIcon, StarIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { StarIcon as StarIconSolid, RocketLaunchIcon } from '@heroicons/react/24/solid'
 import { auth } from '@/lib/firebaseClient'
 import { useAuth } from '@/components/AuthProvider'
 import { getPublicProfile, saveMyPublicProfile } from '@/lib/publicProfiles'
 import { uploadStencil } from '@/lib/stencils'
+import { getUserSubscription, type SubscriptionData } from '@/lib/subscriptions'
+import { SUBSCRIPTION_TIERS } from '@/lib/subscriptionConfig'
 import type { PublicProfile } from '@/types'
 import Image from 'next/image'
 
@@ -33,6 +35,7 @@ export default function SettingsPage() {
   const [schedule, setSchedule] = useState(3)
   const [locationPrecise, setLocationPrecise] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
 
   const handleSignOut = async () => {
     try {
@@ -64,6 +67,7 @@ export default function SettingsPage() {
       if (!user) return
       try {
         const p = await getPublicProfile(user.uid)
+        const sub = await getUserSubscription(user.uid)
         if (cancelled) return
         if (p) {
           setProfile(p)
@@ -76,6 +80,7 @@ export default function SettingsPage() {
           setPortfolioImages(p.portfolioImages ?? [])
           setCoverURL(p.coverURL ?? '')
         }
+        setSubscription(sub)
       } catch (e) {
         console.error(e)
       }
@@ -90,8 +95,12 @@ export default function SettingsPage() {
       setStatusMessage('Please select a file and ensure you are logged in')
       return
     }
-    if (portfolioImages.length >= 5) {
-      setStatusMessage('Maximum 5 portfolio images allowed')
+    
+    // Check subscription limits
+    const currentTier = subscription?.tier || 'free'
+    const maxImages = SUBSCRIPTION_TIERS[currentTier].features.maxPortfolioImages
+    if (maxImages !== -1 && portfolioImages.length >= maxImages) {
+      setStatusMessage(`❌ You've reached the limit of ${maxImages} images. Upgrade to add more!`)
       e.target.value = ''
       return
     }
@@ -228,6 +237,92 @@ export default function SettingsPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm text-ink-text-muted">
             {statusMessage}
           </div>
+        )}
+
+        {/* Subscription Section */}
+        {profile?.role === 'artist' && subscription && (
+          <section className="space-y-4 rounded-3xl border border-white/5 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted mb-2">Subscription</h2>
+                <div className="flex items-center gap-3">
+                  {subscription.tier === 'free' && <SparklesIcon className="w-6 h-6 text-purple-400" />}
+                  {subscription.tier === 'pro' && <StarIconSolid className="w-6 h-6 text-yellow-400" />}
+                  {subscription.tier === 'premium' && <RocketLaunchIcon className="w-6 h-6 text-pink-400" />}
+                  <span className="text-2xl font-bold text-white capitalize">{subscription.tier} Plan</span>
+                  {subscription.tier !== 'free' && (
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/30">
+                      ACTIVE
+                    </span>
+                  )}
+                </div>
+              </div>
+              {subscription.tier !== 'premium' && (
+                <button
+                  onClick={() => router.push('/pricing')}
+                  className="btn btn-primary flex items-center gap-2"
+                >
+                  <SparklesIcon className="w-5 h-5" />
+                  Upgrade
+                </button>
+              )}
+            </div>
+
+            {/* Current Plan Features */}
+            <div className="grid sm:grid-cols-2 gap-3 pt-2">
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10">
+                <div className="text-xs text-ink-text-muted mb-1">Booking Fee</div>
+                <div className="text-2xl font-bold text-white">
+                  {SUBSCRIPTION_TIERS[subscription.tier].features.bookingFeeRate === 0 ? '0%' : '3%'}
+                </div>
+                {SUBSCRIPTION_TIERS[subscription.tier].features.bookingFeeRate > 0 && (
+                  <div className="text-xs text-yellow-400 mt-1">Upgrade for 0% fees</div>
+                )}
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10">
+                <div className="text-xs text-ink-text-muted mb-1">Portfolio Images</div>
+                <div className="text-2xl font-bold text-white">
+                  {portfolioImages.length}
+                  {SUBSCRIPTION_TIERS[subscription.tier].features.maxPortfolioImages === -1 
+                    ? ' / ∞' 
+                    : ` / ${SUBSCRIPTION_TIERS[subscription.tier].features.maxPortfolioImages}`}
+                </div>
+                {portfolioImages.length >= SUBSCRIPTION_TIERS[subscription.tier].features.maxPortfolioImages && 
+                 SUBSCRIPTION_TIERS[subscription.tier].features.maxPortfolioImages !== -1 && (
+                  <div className="text-xs text-yellow-400 mt-1">Limit reached - upgrade for more</div>
+                )}
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10">
+                <div className="text-xs text-ink-text-muted mb-1">AI Design Credits</div>
+                <div className="text-2xl font-bold text-white">
+                  {profile.aiCreditsUsed || 0}
+                  {SUBSCRIPTION_TIERS[subscription.tier].features.aiDesignCredits === -1 
+                    ? ' / ∞' 
+                    : ` / ${SUBSCRIPTION_TIERS[subscription.tier].features.aiDesignCredits}`}
+                </div>
+                <div className="text-xs text-ink-text-muted mt-1">Resets monthly</div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10">
+                <div className="text-xs text-ink-text-muted mb-1">Active Leads</div>
+                <div className="text-2xl font-bold text-white">
+                  0
+                  {SUBSCRIPTION_TIERS[subscription.tier].features.maxActiveLeads === -1 
+                    ? ' / ∞' 
+                    : ` / ${SUBSCRIPTION_TIERS[subscription.tier].features.maxActiveLeads}`}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => router.push('/pricing')}
+              className="w-full text-center text-sm text-purple-400 hover:text-purple-300 transition-colors pt-2"
+            >
+              View all plans and features →
+            </button>
+          </section>
         )}
 
         <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">
@@ -415,10 +510,15 @@ export default function SettingsPage() {
                       </div>
                     )}
                     
-                    {portfolioImages.length < 5 ? (
+                    {(() => {
+                      const currentTier = subscription?.tier || 'free'
+                      const maxImages = SUBSCRIPTION_TIERS[currentTier].features.maxPortfolioImages
+                      const canUpload = maxImages === -1 || portfolioImages.length < maxImages
+                    
+                      return canUpload ? (
                       <label className="btn btn-secondary cursor-pointer w-full flex items-center justify-center gap-2 group">
                         <span className="text-2xl group-hover:scale-110 transition-transform">+</span>
-                        {uploadingPortfolio ? 'Uploading...' : `Add Portfolio Image (${portfolioImages.length}/5)`}
+                        {uploadingPortfolio ? 'Uploading...' : `Add Portfolio Image (${portfolioImages.length}/${maxImages === -1 ? '∞' : maxImages})`}
                         <input 
                           type="file" 
                           accept="image/*" 
@@ -429,10 +529,21 @@ export default function SettingsPage() {
                       </label>
                     ) : (
                       <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center">
-                        <p className="text-sm text-ink-text-muted">Maximum of 5 portfolio images reached</p>
-                        <p className="text-xs text-ink-text-muted mt-1">Remove an image to upload a new one</p>
+                        <p className="text-sm text-ink-text-muted">Maximum of {maxImages} portfolio images reached</p>
+                        <p className="text-xs text-ink-text-muted mt-1">
+                          {currentTier === 'free' ? 'Upgrade to Pro for 20 images or Premium for unlimited' : 'Remove an image to upload a new one'}
+                        </p>
+                        {currentTier !== 'premium' && (
+                          <button
+                            onClick={() => router.push('/pricing')}
+                            className="mt-3 btn btn-primary text-sm"
+                          >
+                            <SparklesIcon className="w-4 h-4 inline mr-1" />
+                            Upgrade Plan
+                          </button>
+                        )}
                       </div>
-                    )}
+                    )})()}
                   </div>
                 </div>
               )}
