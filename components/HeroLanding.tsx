@@ -25,8 +25,11 @@ export default function HeroLanding() {
     }
     el.addEventListener('mousemove', onMove)
     // mount animation
-    const t = setTimeout(() => setMounted(true), 80)
-    return () => el.removeEventListener('mousemove', onMove)
+    const timeoutId = setTimeout(() => setMounted(true), 80)
+    return () => {
+      el.removeEventListener('mousemove', onMove)
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   return (
@@ -74,7 +77,7 @@ export default function HeroLanding() {
             <div className="relative w-full max-w-2xl">
               <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent shadow-xl">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <HeroGraphic className="w-full h-full" />
+                  <HeroGraphic className="w-full h-full" motion={motion} mounted={mounted} />
                 </div>
               </div>
 
