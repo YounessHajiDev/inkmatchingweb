@@ -12,6 +12,7 @@ export default function HeroLanding() {
 
   const ref = useRef<HTMLDivElement | null>(null)
   const [motion, setMotion] = useState({ x: 0, y: 0 })
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const el = ref.current
@@ -20,9 +21,11 @@ export default function HeroLanding() {
       const rect = el.getBoundingClientRect()
       const x = (e.clientX - rect.left - rect.width / 2) / rect.width
       const y = (e.clientY - rect.top - rect.height / 2) / rect.height
-      setMotion({ x: x * 12, y: y * 8 })
+      setMotion({ x: x * 20, y: y * 12 })
     }
     el.addEventListener('mousemove', onMove)
+    // mount animation
+    const t = setTimeout(() => setMounted(true), 80)
     return () => el.removeEventListener('mousemove', onMove)
   }, [])
 
@@ -39,9 +42,9 @@ export default function HeroLanding() {
               <span className="block text-4xl sm:text-6xl">{t('hero_title_line1')}</span>
               <span className="block mt-2 text-3xl font-semibold text-ink-accent sm:text-4xl">{t('hero_title_line2')}</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-text-muted">{t('hero_subtitle')}</p>
+            <p className={`mt-6 max-w-xl text-lg leading-relaxed text-ink-text-muted transition-transform duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'}`}>{t('hero_subtitle')}</p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className={`mt-8 flex flex-wrap gap-3 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
               <button onClick={() => router.push('/discover')} className="btn btn-primary shadow-glow">
                 {t('hero_cta_primary')}
               </button>
@@ -50,7 +53,7 @@ export default function HeroLanding() {
               </button>
             </div>
 
-            <div className="mt-8 flex gap-8">
+            <div className={`mt-8 flex gap-8 transition-opacity duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <div className="flex flex-col">
                 <span className="text-2xl font-bold text-white">{t('hero_stat_1_value')}</span>
                 <span className="text-sm text-ink-text-muted">{t('hero_stat_1_label')}</span>
@@ -76,7 +79,7 @@ export default function HeroLanding() {
               </div>
 
               {/* Countdown bubble */}
-              <div style={{ transform: `translate(${motion.x}px, ${motion.y}px)` }} className="absolute -right-8 -top-8 flex items-center gap-4 rounded-full bg-gradient-to-br from-indigo-700 to-pink-600 p-4 text-white shadow-2xl transition-transform will-change-transform">
+              <div style={{ transform: `translate(${motion.x}px, ${motion.y}px)` }} className={`absolute -right-8 -top-8 flex items-center gap-4 rounded-full bg-gradient-to-br from-indigo-700 to-pink-600 p-4 text-white shadow-2xl transition-transform will-change-transform ${mounted ? 'opacity-100' : 'opacity-0'}`} aria-hidden>
                 <div className="text-xs text-ink-text-muted">{t('hero_countdown_label')}</div>
                 <div className="ml-2 rounded-full bg-white/10 px-3 py-1 text-lg font-semibold">22d</div>
               </div>
