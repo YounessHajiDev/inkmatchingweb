@@ -20,9 +20,6 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [accountType, setAccountType] = useState<UserRole>('client')
   const [rememberEmail, setRememberEmail] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +59,12 @@ export default function LoginPage() {
     : 'Match with artists, share stencils & aftercare.', [mode])
 
   const switchMode = () => {
-    setMode((prev) => prev === 'signin' ? 'signup' : 'signin')
+     if (mode === 'signin') {
+       // Redirect to role selection for signup
+       router.push('/signup/role')
+     } else {
+       setMode('signin')
+     }
     setError(null)
   }
 
@@ -95,35 +97,8 @@ export default function LoginPage() {
         }
         return
       }
-
-      if (password !== confirmPassword) throw new Error('Passwords do not match.')
-      const credential = await createUserWithEmailAndPassword(auth, email, password)
-      if (displayName.trim()) {
-        await updateProfile(credential.user, { displayName: displayName.trim() })
-      }
-      // Persist role to private users path immediately so the account type is correct from the start
-      await set(ref(db, `users/${credential.user.uid}`), {
-        uid: credential.user.uid,
-        email,
-        displayName: displayName.trim() || email,
-        role: accountType,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
-      await saveMyPublicProfile(credential.user.uid, {
-        uid: credential.user.uid,
-        role: accountType,
-        displayName: displayName.trim() || email,
-        city: '',
-        styles: '',
-        isPublic: accountType === 'artist' ? false : true,
-      })
-      
-      // Brief delay to ensure auth state propagates through AuthProvider
-      // so useUserRole can immediately detect the correct role on the target page
-      await new Promise(resolve => setTimeout(resolve, 400))
-      
-      router.push(accountType === 'artist' ? '/settings' : '/')
+       // Signup is now handled via /signup/role flow
+       router.push('/signup/role')
     } catch (err: any) {
       setError(err?.message ?? 'Authentication failed.')
     } finally {
@@ -142,36 +117,6 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {mode === 'signup' && (
-              <>
-                <div>
-                  <label className="label">Display name</label>
-                  <input
-                    className="input"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your name"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <p className="label">Account type</p>
-                  <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
-                    {accountTypes.map((type) => (
-                      <button
-                        type="button"
-                        key={type}
-                        onClick={() => setAccountType(type)}
-                        className={`rounded-full px-5 py-2 text-sm font-semibold capitalize transition ${
-                          accountType === type ? 'bg-ink-button text-white shadow-glow' : 'text-ink-text-muted hover:text-white'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
 
             <div>
               <label className="label">Email</label>
@@ -198,20 +143,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {mode === 'signup' && (
-              <div>
-                <label className="label">Confirm password</label>
-                <input
-                  type="password"
-                  className="input"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat password"
-                  minLength={6}
-                  required
-                />
-              </div>
-            )}
 
             {error && <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>}
 
@@ -240,9 +171,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <button onClick={switchMode} className="w-full rounded-full border border-white/10 bg-white/[0.04] py-3 text-sm font-semibold text-ink-text-muted transition hover:text-white">
-            {mode === 'signin' ? 'Create account →' : 'Already have an account? Sign in'}
-          </button>
+           {mode === 'signin' && (
+             <button onClick={switchMode} className="w-full rounded-full border border-white/10 bg-white/[0.04] py-3 text-sm font-semibold text-ink-text-muted transition hover:text-white">
+               Create account →
+             </button>
+           )}
         </div>
       </div>
     </div>
