@@ -47,7 +47,13 @@ export async function saveMyPublicProfile(
   input: Partial<PublicProfile>
 ): Promise<void> {
   const profileRef = ref(db, `publicProfiles/${uid}`)
-  await set(profileRef, { ...input, uid })
+  
+  // Remove undefined values - Firebase RTDB doesn't accept undefined
+  const cleanedInput = Object.fromEntries(
+    Object.entries({ ...input, uid }).filter(([_, v]) => v !== undefined)
+  )
+  
+  await set(profileRef, cleanedInput)
 }
 
 export async function deferMyProfileVisibility(uid: string): Promise<void> {

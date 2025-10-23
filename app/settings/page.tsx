@@ -146,7 +146,23 @@ export default function SettingsPage() {
   }
 
   const saveProfile = async (makePublic?: boolean) => {
-    if (!user) return
+    if (!user) {
+      setStatusMessage('❌ You must be logged in to save')
+      return
+    }
+    
+    // Validate required fields
+    if (!displayName.trim()) {
+      setStatusMessage('❌ Display name is required')
+      return
+    }
+    if (!city.trim()) {
+      setStatusMessage('❌ City is required')
+      return
+    }
+    
+    setStatusMessage('Saving profile...')
+    
     try {
       const input: Partial<PublicProfile> = {
         uid: user.uid,
@@ -159,6 +175,8 @@ export default function SettingsPage() {
         coverURL: coverURL,
         isPublic: makePublic ?? (publicProfile === 'public'),
       }
+      
+      console.log('Saving profile with data:', input)
 
       // Geocode by address (preferred) or city to get coordinates
       if ((input.address || input.city) && input.role === 'artist') {
@@ -179,13 +197,14 @@ export default function SettingsPage() {
       }
 
       await saveMyPublicProfile(user.uid, input)
-      setStatusMessage('Profile saved')
+      console.log('Profile saved successfully')
+      setStatusMessage('✅ Profile saved successfully!')
       setEditingProfile(false)
       setProfile({ ...(profile ?? (input as any)), ...(input as any) } as PublicProfile)
       setPublicProfile((makePublic ?? input.isPublic) ? 'public' : 'hidden')
     } catch (e: any) {
-      console.error(e)
-      setStatusMessage(e?.message ?? 'Unable to save profile')
+      console.error('Save profile error:', e)
+      setStatusMessage(`❌ ${e?.message ?? 'Unable to save profile'}`)
     }
   }
 
