@@ -3,10 +3,28 @@
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/useLocale'
+import HeroGraphic from './HeroGraphic'
+import { useEffect, useRef, useState } from 'react'
 
 export default function HeroLanding() {
   const router = useRouter()
   const { t } = useLocale()
+
+  const ref = useRef<HTMLDivElement | null>(null)
+  const [motion, setMotion] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect()
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height
+      setMotion({ x: x * 12, y: y * 8 })
+    }
+    el.addEventListener('mousemove', onMove)
+    return () => el.removeEventListener('mousemove', onMove)
+  }, [])
 
   return (
     <section className="mx-auto max-w-7xl px-6 pb-16 pt-8 sm:px-10 sm:pt-16">
@@ -49,20 +67,16 @@ export default function HeroLanding() {
           </div>
 
           {/* Right: visual card with countdown bubble */}
-          <div className="z-10 flex items-center justify-center">
+          <div ref={ref} className="z-10 flex items-center justify-center">
             <div className="relative w-full max-w-2xl">
               <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent shadow-xl">
-                {/* Placeholder image / artboard */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-56 w-56 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 blur-[30px] opacity-30" />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-40 w-72 rounded-md border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent" />
+                  <HeroGraphic className="w-full h-full" />
                 </div>
               </div>
 
               {/* Countdown bubble */}
-              <div className="absolute -right-8 -top-8 flex items-center gap-4 rounded-full bg-gradient-to-br from-indigo-700 to-pink-600 p-4 text-white shadow-2xl">
+              <div style={{ transform: `translate(${motion.x}px, ${motion.y}px)` }} className="absolute -right-8 -top-8 flex items-center gap-4 rounded-full bg-gradient-to-br from-indigo-700 to-pink-600 p-4 text-white shadow-2xl transition-transform will-change-transform">
                 <div className="text-xs text-ink-text-muted">{t('hero_countdown_label')}</div>
                 <div className="ml-2 rounded-full bg-white/10 px-3 py-1 text-lg font-semibold">22d</div>
               </div>
