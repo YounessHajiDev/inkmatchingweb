@@ -45,7 +45,7 @@ export default function InkTrailCanvas({
     resize()
     window.addEventListener('resize', resize)
 
-    const onMove = (e: MouseEvent) => {
+    const onMove = (e: PointerEvent) => {
       const { x: px, y: py } = mouseRef.current
       const x = e.clientX
       const y = e.clientY
@@ -56,7 +56,7 @@ export default function InkTrailCanvas({
         vy: y - py,
       }
     }
-    window.addEventListener('mousemove', onMove)
+    window.addEventListener('pointermove', onMove)
 
     // Initial paint
     ctx.fillStyle = skinColor
@@ -110,7 +110,7 @@ export default function InkTrailCanvas({
     rafRef.current = requestAnimationFrame(loop)
 
     return () => {
-      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('pointermove', onMove)
       window.removeEventListener('resize', resize)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
