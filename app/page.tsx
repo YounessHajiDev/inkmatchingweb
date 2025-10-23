@@ -23,11 +23,22 @@ export default function LandingPage() {
       <div className="relative z-10">
         <header className="px-6 py-6 sm:px-10">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <div className="text-xl font-black tracking-tight text-white">INKMATCHING</div>
-            <nav className="hidden items-center gap-6 text-sm font-semibold text-ink-text sm:flex">
-              <button onClick={() => router.push('/pricing')} className="hover:text-white/90">Pricing</button>
-              <button onClick={() => router.push('/discover')} className="hover:text-white/90">Discover</button>
-              <button onClick={() => router.push('/login')} className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-white backdrop-blur-sm hover:bg-white/20">Sign in</button>
+            <div className="flex items-center gap-2">
+              <div className="text-xl font-black tracking-tight text-white">InkMatch</div>
+              <div className="text-xs font-light tracking-wider text-ink-text-muted uppercase">Tattoo Market</div>
+            </div>
+            <nav className="flex items-center gap-3 sm:gap-6 text-sm font-semibold">
+              <button onClick={() => router.push('/pricing')} className="text-ink-text hover:text-white transition-colors">Pricing</button>
+              <button onClick={() => router.push('/discover')} className="text-ink-text hover:text-white transition-colors">Discover</button>
+              <button onClick={() => router.push('/signup/role')} className="hidden sm:inline-flex items-center gap-2 text-ink-text hover:text-white transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Join us
+              </button>
+              <button onClick={() => router.push('/login')} className="rounded-full bg-cyan-500 hover:bg-cyan-400 px-4 py-2 text-white font-semibold transition-all shadow-lg hover:shadow-cyan-500/50">
+                Sign in
+              </button>
             </nav>
           </div>
         </header>
