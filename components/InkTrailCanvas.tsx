@@ -24,6 +24,20 @@ export default function InkTrailCanvas({
   const rafRef = useRef<number | null>(null)
   const lastRef = useRef<number>(0)
   const hueRef = useRef(0)
+  type Particle = {
+    x: number
+    y: number
+    vx: number
+    vy: number
+    rot: number
+    vr: number
+    scale: number
+    life: number
+    maxLife: number
+    glyph: string
+    smoke: number
+  }
+  const particlesRef = useRef<Particle[]>([])
 
   useEffect(() => {
     const canvas = canvasRef.current!
@@ -55,31 +69,76 @@ export default function InkTrailCanvas({
         vx: x - px,
         vy: y - py,
       }
+
+      // Spawn decorative particles (butterflies/flowers/animals)
+      const speed = Math.hypot(x - px, y - py)
+      const count = Math.min(6, 1 + Math.floor(speed / 6))
+      const GLYPHS = ['🦋','🌸','🌺','🌼','🦅','🐍','🐯','🐺','🦊','🦂']
+      for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2
+        const sp = 0.4 + Math.random() * 1.2
+        particlesRef.current.push({
+          x,
+          y,
+          vx: Math.cos(ang) * sp * 0.8 + (x - px) * 0.02,
+          vy: Math.sin(ang) * sp * 0.4 - 0.2, // slight upward drift like smoke
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.03,
+          scale: 0.7 + Math.random() * 0.9,
+          life: 0,
+          maxLife: 700 + Math.random() * 900, // ms
+          glyph: GLYPHS[(Math.random() * GLYPHS.length) | 0],
+          smoke: 8 + Math.random() * 12,
+        })
+      }
     }
     window.addEventListener('pointermove', onMove)
 
   // Start transparent so underlying app background shows
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    const splat = (x: number, y: number, pressure: number) => {
-      // Rainbow ink dot with minimal bleed
-      const hue = hueRef.current % 360
-      const color = `hsl(${hue}, 90%, 55%)`
+    const drawParticles = (dt: number) => {
+      const list = particlesRef.current
+      const n = list.length
+      const toRemove: number[] = []
+      ctx.save()
+      for (let i = 0; i < n; i++) {
+        const p = list[i]
+        p.life += dt
+        if (p.life >= p.maxLife) { toRemove.push(i); continue }
+        // update motion
+        p.x += p.vx
+        p.y += p.vy
+        p.vy -= 0.003 // gentle updraft
+        p.rot += p.vr
+        p.scale *= 1.005 // slight expansion like smoke
 
-      // Main thin dot
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = color
-      const lineWidth = 1.1 + pressure * 0.5 // ~1.1-1.6px
-      ctx.beginPath()
-      ctx.arc(x, y, lineWidth, 0, Math.PI * 2)
-      ctx.fill()
+        // compute alpha with ease-out cubic
+        const t = p.life / p.maxLife
+        const alpha = 1 - (1 - t) * (1 - t) * (1 - t)
+        const a = Math.max(0, 1 - alpha) // fade from 1 -> 0
 
-      // Minimal soft edge
-      ctx.fillStyle = `hsla(${hue}, 90%, 55%, 0.18)`
-      const bleedRadius = lineWidth + 0.7
-      ctx.beginPath()
-      ctx.arc(x, y, bleedRadius, 0, Math.PI * 2)
-      ctx.fill()
+        ctx.save()
+        ctx.translate(p.x, p.y)
+        ctx.rotate(p.rot)
+        ctx.globalAlpha = a
+        ctx.shadowColor = 'rgba(0,0,0,0.30)'
+        ctx.shadowBlur = p.smoke
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        const size = 20 * p.scale
+        ctx.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif`
+        ctx.fillText(p.glyph, 0, 0)
+        ctx.restore()
+      }
+      ctx.restore()
+      // prune
+      for (let i = toRemove.length - 1; i >= 0; i--) {
+        const idx = toRemove[i]
+        list.splice(idx, 1)
+      }
+      // cap
+      if (list.length > 180) list.splice(0, list.length - 180)
     }
 
     const loop = (t: number) => {
@@ -87,32 +146,14 @@ export default function InkTrailCanvas({
       const dt = Math.max(0, Math.min(33, now - (lastRef.current || now)))
       lastRef.current = now
 
-      const w = canvas.clientWidth
-      const h = canvas.clientHeight
+    const w = canvas.clientWidth
+    const h = canvas.clientHeight
 
-  // Fast fade using destination-out to increase transparency of existing ink
-  ctx.globalCompositeOperation = 'destination-out'
-  ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`
-  ctx.fillRect(0, 0, w, h)
-  ctx.globalCompositeOperation = 'source-over'
+    // clear frame and redraw particles (each has its own alpha for smoke fade)
+    ctx.clearRect(0, 0, w, h)
 
-      const { x, y, vx, vy } = mouseRef.current
-      if (x > -1000) {
-        const speed = Math.hypot(vx, vy)
-        // Thin, continuous line like a tattoo needle
-        // More interpolation points for smooth, connected line
-        const steps = Math.max(3, Math.ceil(speed / 1.8))
-        for (let i = 0; i < steps; i++) {
-          const t = i / steps
-          const ix = x - (vx * t)
-          const iy = y - (vy * t)
-          // Slight pressure variation based on speed
-          const pressure = Math.min(1, 0.4 + speed * 0.02)
-          splat(ix, iy, pressure)
-        }
-        // advance hue based on speed for dynamic rainbow
-        hueRef.current = (hueRef.current + Math.max(0.6, speed * 0.15)) % 360
-      }
+      // draw and update particle system
+      drawParticles(dt)
 
       rafRef.current = requestAnimationFrame(loop)
     }
