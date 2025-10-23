@@ -16,6 +16,8 @@ export default function AdminPage() {
   const [users, setUsers] = useState<Array<{ uid: string; email?: string | null; displayName?: string | null; customClaims?: any }>>([])
   const [editingUid, setEditingUid] = useState<string | null>(null)
   const [editingProfile, setEditingProfile] = useState<any | null>(null)
+  const [leadsList, setLeadsList] = useState<any[]>([])
+  const [bookingsList, setBookingsList] = useState<any[]>([])
 
   useEffect(() => {
     if (!user) { setRole(null); return }
@@ -66,6 +68,25 @@ export default function AdminPage() {
       }
     }
     loadUsers()
+    // load full leads & bookings for admin actions
+    const loadLeadsAndBookings = async () => {
+      try {
+        const token = await user.getIdToken()
+        const [leadsRes, bookingsRes] = await Promise.all([
+          fetch('/api/admin/leads/list', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/admin/bookings/list', { headers: { Authorization: `Bearer ${token}` } }),
+        ])
+        const leadsJson = await leadsRes.json()
+        const bookingsJson = await bookingsRes.json()
+        if (!cancelled) {
+          setLeadsList(Array.isArray(leadsJson.leads) ? leadsJson.leads : [])
+          setBookingsList(Array.isArray(bookingsJson.bookings) ? bookingsJson.bookings : [])
+        }
+      } catch (e) {
+        console.error('Unable to load leads/bookings', e)
+      }
+    }
+    loadLeadsAndBookings()
     return () => { cancelled = true }
   }, [role, user])
 
@@ -138,6 +159,76 @@ export default function AdminPage() {
     } catch (e) {
       console.error(e)
       setError('Unable to save profile')
+    }
+  }
+
+  async function updateLead(artistUid: string, leadId: string, updates: any) {
+    if (!user) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/leads/${artistUid}/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updates),
+      })
+      const json = await res.json()
+      if (json?.success) {
+        setLeadsList((s) => s.map((l) => (l.artistUid === artistUid && l.leadId === leadId ? { ...l, ...updates } : l)))
+      }
+    } catch (e) {
+      console.error(e)
+      setError('Unable to update lead')
+    }
+  }
+
+  async function deleteLead(artistUid: string, leadId: string) {
+    if (!user) return
+    if (!confirm('Delete this lead? This cannot be undone.')) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/leads/${artistUid}/${leadId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json()
+      if (json?.success) setLeadsList((s) => s.filter((l) => !(l.artistUid === artistUid && l.leadId === leadId)))
+    } catch (e) {
+      console.error(e)
+      setError('Unable to delete lead')
+    }
+  }
+
+  async function updateBooking(artistUid: string, bookingId: string, updates: any) {
+    if (!user) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/bookings/${artistUid}/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updates),
+      })
+      const json = await res.json()
+      if (json?.success) setBookingsList((s) => s.map((b) => (b.artistUid === artistUid && b.bookingId === bookingId ? { ...b, ...updates } : b)))
+    } catch (e) {
+      console.error(e)
+      setError('Unable to update booking')
+    }
+  }
+
+  async function deleteBooking(artistUid: string, bookingId: string) {
+    if (!user) return
+    if (!confirm('Delete this booking? This cannot be undone.')) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/bookings/${artistUid}/${bookingId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json()
+      if (json?.success) setBookingsList((s) => s.filter((b) => !(b.artistUid === artistUid && b.bookingId === bookingId)))
+    } catch (e) {
+      console.error(e)
+      setError('Unable to delete booking')
     }
   }
 
@@ -217,6 +308,103 @@ export default function AdminPage() {
               {users.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-6 text-center text-gray-500">No users found or insufficient privileges.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Leads management */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Leads</h2>
+          <span className="rounded-full border border-ink-muted/60 px-3 py-1 text-xs uppercase tracking-wide text-gray-500">{leadsList.length} leads</span>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-ink-muted/60">
+          <table className="min-w-full text-sm text-gray-300">
+            <thead className="bg-ink-surface/70 text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-4 py-3 text-left">Artist</th>
+                <th className="px-4 py-3 text-left">Client</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Notes</th>
+                <th className="px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-muted/60 bg-ink-surface/40">
+              {leadsList.map((l) => (
+                <tr key={`${l.artistUid}_${l.leadId}`} className="hover:bg-ink-surface/70">
+                  <td className="px-4 py-3 text-xs text-gray-300">{l.artistUid}</td>
+                  <td className="px-4 py-3 text-white">{l.clientName ?? l.clientUid}</td>
+                  <td className="px-4 py-3">
+                    <select value={l.status || 'new'} onChange={(e) => updateLead(l.artistUid, l.leadId, { status: e.target.value })} className="input input-sm">
+                      <option value="new">new</option>
+                      <option value="accepted">accepted</option>
+                      <option value="closed">closed</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-gray-400">{l.note || ''}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button className="btn btn-sm" onClick={() => updateLead(l.artistUid, l.leadId, { status: 'accepted' })}>Accept</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => deleteLead(l.artistUid, l.leadId)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {leadsList.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No leads yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Bookings management */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Bookings</h2>
+          <span className="rounded-full border border-ink-muted/60 px-3 py-1 text-xs uppercase tracking-wide text-gray-500">{bookingsList.length} bookings</span>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-ink-muted/60">
+          <table className="min-w-full text-sm text-gray-300">
+            <thead className="bg-ink-surface/70 text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-4 py-3 text-left">Artist</th>
+                <th className="px-4 py-3 text-left">Client</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Deposit</th>
+                <th className="px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-muted/60 bg-ink-surface/40">
+              {bookingsList.map((b) => (
+                <tr key={`${b.artistUid}_${b.bookingId}`} className="hover:bg-ink-surface/70">
+                  <td className="px-4 py-3 text-xs text-gray-300">{b.artistUid}</td>
+                  <td className="px-4 py-3 text-white">{b.clientUid}</td>
+                  <td className="px-4 py-3">
+                    <select value={b.status || 'pending'} onChange={(e) => updateBooking(b.artistUid, b.bookingId, { status: e.target.value })} className="input input-sm">
+                      <option value="pending">pending</option>
+                      <option value="confirmed">confirmed</option>
+                      <option value="cancelled">cancelled</option>
+                      <option value="completed">completed</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-gray-400">{b.depositAmount ? `$${b.depositAmount}` : '—'}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button className="btn btn-sm" onClick={() => updateBooking(b.artistUid, b.bookingId, { status: 'confirmed' })}>Confirm</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => deleteBooking(b.artistUid, b.bookingId)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {bookingsList.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No bookings yet.</td>
                 </tr>
               )}
             </tbody>
