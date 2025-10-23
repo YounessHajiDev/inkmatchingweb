@@ -53,7 +53,7 @@ export default function PricingPage() {
             Choose Your Plan
           </h1>
           <p className="text-xl text-gray-300 mb-8">
-            Start free, upgrade when you're ready to grow
+            Start free, upgrade when you&#39;re ready to grow
           </p>
 
           {/* Billing Toggle */}
@@ -169,7 +169,7 @@ export default function PricingPage() {
           <div className="space-y-6 text-left">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-semibold text-white mb-2">
-                What's the booking fee?
+                What&#39;s the booking fee?
               </h3>
               <p className="text-gray-400">
                 Free tier has a 3% booking fee. Pro and Premium plans have 0% booking fees - your subscription covers it!
@@ -181,7 +181,7 @@ export default function PricingPage() {
                 Can I cancel anytime?
               </h3>
               <p className="text-gray-400">
-                Yes! Cancel anytime from your settings. You'll retain access until the end of your billing period.
+                Yes! Cancel anytime from your settings. You&#39;ll retain access until the end of your billing period.
               </p>
             </div>
 
@@ -190,7 +190,7 @@ export default function PricingPage() {
                 What happens if I downgrade?
               </h3>
               <p className="text-gray-400">
-                You'll keep your content, but some features will be limited. For example, extra portfolio images will be hidden (not deleted).
+                You&#39;ll keep your content, but some features will be limited. For example, extra portfolio images will be hidden (not deleted).
               </p>
             </div>
           </div>
