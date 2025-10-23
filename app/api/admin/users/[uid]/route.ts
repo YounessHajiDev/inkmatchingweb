@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebaseAdmin'
+import { logAdminAction } from '@/lib/adminAudit'
 
 async function verifyAdmin(req: Request) {
   const auth = req.headers.get('authorization')
@@ -19,6 +20,14 @@ export async function DELETE(req: Request, { params }: { params: { uid: string }
   const { uid } = params
   try {
     await adminAuth.deleteUser(uid)
+    // log admin action (actor extracted from token)
+    try {
+      const auth = req.headers.get('authorization')
+      const decoded = auth ? await adminAuth.verifyIdToken(auth.split(' ')[1]) : null
+      await logAdminAction(decoded?.uid ?? null, 'delete_user', uid, { deletedUid: uid })
+    } catch (e) {
+      console.error('audit log failed', e)
+    }
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error('admin delete user error', e)
@@ -35,6 +44,13 @@ export async function PATCH(req: Request, { params }: { params: { uid: string } 
       await adminAuth.setCustomUserClaims(uid, { admin: true })
     } else if (body.setAdmin === false) {
       await adminAuth.setCustomUserClaims(uid, { admin: false })
+    }
+    try {
+      const auth = req.headers.get('authorization')
+      const decoded = auth ? await adminAuth.verifyIdToken(auth.split(' ')[1]) : null
+      await logAdminAction(decoded?.uid ?? null, 'set_admin_claim', uid, { setAdmin: body.setAdmin })
+    } catch (e) {
+      console.error('audit log failed', e)
     }
     return NextResponse.json({ success: true })
   } catch (e) {

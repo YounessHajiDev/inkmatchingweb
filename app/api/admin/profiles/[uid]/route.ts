@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebaseAdmin'
+import { logAdminAction } from '@/lib/adminAudit'
 
 async function isAdmin(req: Request) {
   const auth = req.headers.get('authorization')
@@ -19,6 +20,13 @@ export async function GET(req: Request, { params }: { params: { uid: string } })
   const { uid } = params
   try {
     const snap = await adminDb.ref(`publicProfiles/${uid}`).once('value')
+    try {
+      const auth = req.headers.get('authorization')
+      const decoded = auth ? await (await import('@/lib/firebaseAdmin')).adminAuth.verifyIdToken(auth.split(' ')[1]) : null
+      await logAdminAction(decoded?.uid ?? null, 'view_profile', uid, null)
+    } catch (e) {
+      console.error('audit log failed', e)
+    }
     return NextResponse.json({ profile: snap.exists() ? snap.val() : null })
   } catch (e) {
     console.error('admin get profile error', e)
@@ -32,6 +40,13 @@ export async function PUT(req: Request, { params }: { params: { uid: string } })
   try {
     const body = await req.json()
     await adminDb.ref(`publicProfiles/${uid}`).update(body)
+    try {
+      const auth = req.headers.get('authorization')
+      const decoded = auth ? await (await import('@/lib/firebaseAdmin')).adminAuth.verifyIdToken(auth.split(' ')[1]) : null
+      await logAdminAction(decoded?.uid ?? null, 'update_profile', uid, { updates: body })
+    } catch (e) {
+      console.error('audit log failed', e)
+    }
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error('admin put profile error', e)
