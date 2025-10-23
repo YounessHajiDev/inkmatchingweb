@@ -57,6 +57,9 @@ export default function BottomNav() {
   const { user } = useAuth()
   const { role } = useUserRole()
 
+  // Hide bottom nav when user is not logged in
+  if (!user) return null
+
   const items = navFor(role ?? null, Boolean(user))
   if (items.length === 0) return null
 
