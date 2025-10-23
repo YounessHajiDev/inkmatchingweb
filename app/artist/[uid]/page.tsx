@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getPublicProfile } from '@/lib/publicProfiles'
+import { addFavorite, removeFavorite, isFavorite } from '@/lib/favorites'
+import { useLocale } from '@/hooks/useLocale'
 import { ensureOneToOneThread, sendText } from '@/lib/realtime'
 import { requestBooking } from '@/lib/bookings'
 import { useAuth } from '@/components/AuthProvider'
@@ -38,6 +40,24 @@ export default function ArtistProfilePage() {
     }
     loadProfile()
   }, [uid])
+
+  const { t } = useLocale()
+  const [favorited, setFavorited] = useState<boolean>(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const loadFav = async () => {
+      if (!user || !user.uid || user.uid === uid) return
+      try {
+        const fav = await isFavorite(user.uid, uid)
+        if (!cancelled) setFavorited(fav)
+      } catch (e) {
+        console.error('Failed to load favorite status', e)
+      }
+    }
+    loadFav()
+    return () => { cancelled = true }
+  }, [user, uid])
 
   useEffect(() => {
     if (!user) { setMyProfile(null); return }
@@ -113,9 +133,33 @@ export default function ArtistProfilePage() {
               </div>
             </div>
           )}
-          <button onClick={handleMessage} disabled={messaging} className="btn-primary w-full py-3 text-lg">
-            {messaging ? 'Loading...' : 'Send Message'}
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={handleMessage} disabled={messaging} className="btn-primary w-full py-3 text-lg">
+              {messaging ? t('loading') || 'Loading...' : t('send_message') || 'Send Message'}
+            </button>
+            {isClient && user?.uid !== uid && (
+              <button
+                onClick={async () => {
+                  if (!user) { router.push('/login'); return }
+                  try {
+                    if (favorited) {
+                      await removeFavorite(user.uid, uid)
+                      setFavorited(false)
+                    } else {
+                      await addFavorite(user.uid, uid)
+                      setFavorited(true)
+                    }
+                  } catch (e) {
+                    console.error('Failed to toggle favorite', e)
+                    alert(t('favorite_error') || 'Unable to update favorites')
+                  }
+                }}
+                className={`w-full rounded-xl border px-4 py-3 font-semibold transition ${favorited ? 'bg-ink-accent text-white' : 'bg-white/5 text-ink-text-muted hover:bg-white/8'}`}
+              >
+                {favorited ? (t('remove_favorite') || 'Remove Favorite') : (t('add_favorite') || 'Add to favorites')}
+              </button>
+            )}
+          </div>
           {isClient && user?.uid !== uid && (
             <div className="mt-8 space-y-4 border-t border-ink-muted/60 pt-6">
               <h2 className="text-xl font-semibold text-white">Request an Appointment</h2>

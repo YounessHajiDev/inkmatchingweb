@@ -53,6 +53,11 @@ export default function ArtistCard({ artist }: { artist: ArtistWithProfile }) {
           <div className="grid grid-cols-4 gap-2">
             {artist.portfolioImages.slice(0, 4).map((url, i) => (
               <div key={i} className="group/img relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md">
+                <button
+                  onClick={() => router.push(`/artist/${artist.uid}`)}
+                  className="absolute inset-0"
+                  aria-label={`Open artist ${artist.displayName} portfolio image ${i + 1}`}
+                />
                 <Image src={url} alt={`Work ${i + 1}`} fill className="object-cover transition duration-500 group-hover/img:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover/img:opacity-100" />
               </div>

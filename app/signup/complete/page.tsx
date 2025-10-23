@@ -55,7 +55,7 @@ function SignupCompleteContent() {
 
     setLoading(true)
 
-    try {
+  try {
       // Create Firebase Auth user
       const credential = await createUserWithEmailAndPassword(auth, email, password)
       
@@ -86,6 +86,24 @@ function SignupCompleteContent() {
         subscriptionStatus: 'active',
       })
 
+      // If artist and plan is paid, redirect to Stripe checkout
+      if (role === 'artist' && selectedPlan !== 'free' && typeof window !== 'undefined') {
+        // Call backend to create checkout session
+        const billing = (sessionStorage.getItem('selectedBilling') as 'monthly' | 'yearly') || 'monthly'
+        const res = await fetch(`/api/subscriptions/create-checkout?tier=${selectedPlan}&billing=${billing}`)
+        const data = await res.json()
+        if (data?.url) {
+          // Clear session storage (we will finalize after return)
+          sessionStorage.removeItem('selectedBilling')
+          // redirect to stripe checkout
+          window.location.href = data.url
+          return
+        } else {
+          console.error('Stripe checkout creation failed', data)
+          // continue with signup but mark as free fallback
+        }
+      }
+
       // Clear session storage
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('selectedPlan')
@@ -96,6 +114,14 @@ function SignupCompleteContent() {
       await new Promise(resolve => setTimeout(resolve, 400))
 
       // Redirect based on role
+      // If we returned from Stripe checkout with success, keep flow going
+      const sp = new URLSearchParams(window.location.search)
+      if (sp.get('checkout_success')) {
+        // user landed back after successful checkout
+        router.push('/artist/setup')
+        return
+      }
+
       if (role === 'artist') {
         // Redirect to artist profile setup
         router.push('/artist/setup')

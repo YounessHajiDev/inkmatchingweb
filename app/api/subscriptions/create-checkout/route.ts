@@ -1,26 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 
-// This is a placeholder - you'll need to set up Stripe
+const stripeSecret = process.env.STRIPE_SECRET_KEY
+const stripe = stripeSecret ? new Stripe(stripeSecret) : null
+
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const tier = searchParams.get('tier')
-  const billing = searchParams.get('billing')
+  if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-  // TODO: Implement Stripe checkout
-  // For now, redirect to pricing page with message
-  return NextResponse.redirect(
-    new URL(`/pricing?message=Stripe integration coming soon! Selected: ${tier} (${billing})`, request.url)
-  )
+  const searchParams = request.nextUrl.searchParams
+  const tier = searchParams.get('tier') || 'pro'
+  const billing = searchParams.get('billing') === 'yearly' ? 'yearly' : 'monthly'
+  const successUrl = new URL(`/signup/complete?checkout_success=1&tier=${tier}`, request.url).toString()
+  const cancelUrl = new URL(`/signup/complete?checkout_cancel=1`, request.url).toString()
+
+  // Map tier -> price id from env
+  const priceEnvKey = `STRIPE_PRICE_${tier.toUpperCase()}_${billing.toUpperCase()}`
+  // @ts-ignore
+  const priceId = process.env[priceEnvKey]
+  if (!priceId) {
+    return NextResponse.json({ error: `Missing price id for ${tier} ${billing}. Set ${priceEnvKey} in env.` }, { status: 500 })
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    payment_method_options: undefined,
+    automatic_tax: { enabled: false },
+  })
+
+  return NextResponse.json({ url: session.url, id: session.id })
 }
 
-// Stripe webhook handler
 export async function POST(request: NextRequest) {
-  // TODO: Handle Stripe webhooks
-  // - subscription.created
-  // - subscription.updated
-  // - subscription.deleted
-  // - invoice.payment_succeeded
-  // - invoice.payment_failed
-  
+  // For future webhook handling
   return NextResponse.json({ received: true })
 }
