@@ -129,8 +129,8 @@ function SignupCompleteContent() {
               </h1>
               <p className="text-sm text-ink-text-muted">
                 {role === 'artist' 
-                  ? `You're signing up as an Artist with the ${selectedPlan === 'free' ? 'Free' : selectedPlan === 'pro' ? 'Pro' : 'Premium'} plan`
-                  : "You're signing up as a Client"}
+                  ? `You&apos;re signing up as an Artist with the ${selectedPlan === 'free' ? 'Free' : selectedPlan === 'pro' ? 'Pro' : 'Premium'} plan`
+                  : "You&apos;re signing up as a Client"}
               </p>
             </div>
 

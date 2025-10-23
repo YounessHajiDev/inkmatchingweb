@@ -302,7 +302,7 @@ export default function SettingsPage() {
              ) : (
                <div className="space-y-4">
                  <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3">
-                   <p className="text-sm text-yellow-200">You haven't set up your artist profile yet.</p>
+                   <p className="text-sm text-yellow-200">You haven&apos;t set up your artist profile yet.</p>
                  </div>
                  <button
                    onClick={() => router.push('/artist/setup')}
