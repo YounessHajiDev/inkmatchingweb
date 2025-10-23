@@ -86,13 +86,32 @@ export default function SettingsPage() {
 
   const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file || !user) {
+      setStatusMessage('Please select a file and ensure you are logged in')
+      return
+    }
     if (portfolioImages.length >= 5) {
       setStatusMessage('Maximum 5 portfolio images allowed')
       e.target.value = ''
       return
     }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setStatusMessage('Please select an image file')
+      e.target.value = ''
+      return
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setStatusMessage('Image size must be less than 5MB')
+      e.target.value = ''
+      return
+    }
+    
     setUploadingPortfolio(true)
+    setStatusMessage('Uploading image...')
     try {
       const url = await uploadStencil(user.uid, file)
       setPortfolioImages([...portfolioImages, url])
@@ -100,10 +119,11 @@ export default function SettingsPage() {
       if (portfolioImages.length === 0) {
         setCoverURL(url)
       }
-      setStatusMessage('Portfolio image uploaded')
+      setStatusMessage('✅ Portfolio image uploaded successfully!')
     } catch (err: any) {
       console.error('Upload failed:', err)
-      setStatusMessage(err?.message || 'Upload failed')
+      const errorMessage = err?.message || 'Upload failed. Please check your connection and try again.'
+      setStatusMessage(`❌ ${errorMessage}`)
     } finally {
       setUploadingPortfolio(false)
       e.target.value = ''
@@ -289,7 +309,8 @@ export default function SettingsPage() {
               </div>
               
               {/* Portfolio Images with Featured Cover */}
-              {profile?.role === 'artist' && (
+              {/* Show for artists or if no profile exists yet (assume artist during creation) */}
+              {(!profile || profile?.role === 'artist') && (
                 <div className="space-y-4">
                   <div>
                     <label className="label mb-3">Featured Cover Image</label>
