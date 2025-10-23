@@ -13,12 +13,14 @@ import { getUserSubscription, type SubscriptionData } from '@/lib/subscriptions'
 import { SUBSCRIPTION_TIERS } from '@/lib/subscriptionConfig'
 import type { PublicProfile } from '@/types'
 import Image from 'next/image'
+import { useLocale } from '@/hooks/useLocale'
 
 const appearanceOptions = ['system', 'dark', 'light'] as const
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const { t, locale, setLocale } = useLocale()
   const [appearance, setAppearance] = useState<typeof appearanceOptions[number]>('dark')
   const [rememberEmail, setRememberEmail] = useState(true)
   const [profile, setProfile] = useState<PublicProfile | null>(null)
@@ -110,8 +112,8 @@ export default function SettingsPage() {
 
       <div className="space-y-6 rounded-4xl border border-white/10 bg-white/[0.03] p-6 shadow-glow-soft backdrop-blur-md sm:p-8">
         <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.4em] text-ink-text-muted">Preferences</p>
-          <h1 className="text-3xl font-semibold text-white">Settings</h1>
+          <p className="text-xs uppercase tracking-[0.4em] text-ink-text-muted">{t('preferences')}</p>
+          <h1 className="text-3xl font-semibold text-white">{t('preferences')}</h1>
           <p className="text-sm text-ink-text-muted">Customize your experience, manage your account, and keep your public profile under control.</p>
         </div>
 
@@ -208,8 +210,19 @@ export default function SettingsPage() {
         )}
 
         <section className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.04] p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Appearance</h2>
-          <p className="text-sm text-ink-text-muted">Choose dark, light, or follow system. Tattoo studio dark theme recommended.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-ink-text-muted">{t('appearance')}</h2>
+              <p className="text-sm text-ink-text-muted">Choose dark, light, or follow system. Tattoo studio dark theme recommended.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-xs text-ink-text-muted">{t('language')}</label>
+              <select value={locale} onChange={(e) => setLocale(e.target.value as any)} className="bg-transparent border border-white/5 rounded px-2 py-1 text-sm">
+                <option value="en">EN</option>
+                <option value="fr">FR</option>
+              </select>
+            </div>
+          </div>
           <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
             {appearanceOptions.map((option) => (
               <button

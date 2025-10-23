@@ -4,10 +4,12 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUserRole } from '@/hooks/useUserRole'
 import InkTrailCanvas from '@/components/InkTrailCanvas'
+import { useLocale } from '@/hooks/useLocale'
 
 export default function LandingPage() {
   const router = useRouter()
   const { role } = useUserRole()
+  const { t } = useLocale()
 
   // If already an artist, provide a quick path in UI; no auto-redirect to keep landing visible
   useEffect(() => {
@@ -23,19 +25,19 @@ export default function LandingPage() {
       <div className="relative z-10">
         <section className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-6 pb-20 pt-8 sm:px-10 sm:pt-16 lg:flex-row lg:gap-14">
           <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-ink-text-muted">Tattoo, but smarter</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-ink-text-muted">{t('tattoo_but_smarter')}</p>
             <h1 className="text-balance text-4xl font-extrabold leading-tight text-white sm:text-6xl">
-              Where clients meet the perfect artist
+              {t('where_clients')}
             </h1>
             <p className="mt-4 text-pretty text-base leading-relaxed text-ink-text-muted sm:text-lg">
-              Discover unique tattoo styles, chat without sharing phone numbers, and book with confidence. For artists, manage leads, chat, and grow your business—all in one place.
+              {t('discover_description')}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button onClick={() => router.push('/discover')} className="btn btn-primary">
-                Discover artists
+                {t('discover_artists')}
               </button>
               <button onClick={() => router.push('/pricing')} className="btn btn-secondary">
-                See pricing
+                {t('see_pricing')}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'
 import { ArrowRightOnRectangleIcon, Cog6ToothIcon, PaperAirplaneIcon, PlusCircleIcon, UserCircleIcon, UserPlusIcon } from '@heroicons/react/24/outline'
+import { useLocale } from '@/hooks/useLocale'
 import { useUserRole } from '@/hooks/useUserRole'
 
 function initialsFromEmail(email?: string | null) {
@@ -33,6 +34,7 @@ export default function TopBar() {
     if (pathname.startsWith('/chat')) return <PlusCircleIcon className="h-5 w-5" />
     return <PaperAirplaneIcon className="h-5 w-5" />
   }, [pathname])
+  const { locale, setLocale, t } = useLocale()
 
   return (
     <header className="relative z-30 border-b border-white/5 bg-white/[0.02] backdrop-blur-lg">
@@ -52,11 +54,23 @@ export default function TopBar() {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-ink-text">
             <Link href="/pricing" className="hover:text-white transition-colors">
-              Pricing
+              {t('pricing')}
             </Link>
             <Link href="/discover" className="hover:text-white transition-colors">
-              Discover
+              {t('discover')}
             </Link>
+            {/* Language selector */}
+            <div className="relative">
+              <select
+                value={locale}
+                onChange={(e) => setLocale(e.target.value as any)}
+                className="bg-transparent text-sm text-ink-text-muted border border-white/5 rounded-md px-2 py-1"
+                aria-label={t('language')}
+              >
+                <option value="en">EN</option>
+                <option value="fr">FR</option>
+              </select>
+            </div>
           </nav>
 
           {/* Auth Actions */}
