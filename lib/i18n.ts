@@ -160,6 +160,19 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     privacy_label: 'Privacy',
     terms_label: 'Terms',
     copyright_notice: 'All rights reserved.',
+    // Hero landing
+    hero_title_line1: 'Luxury among artists',
+    hero_title_line2: 'Find the perfect match',
+    hero_subtitle: 'Discover curated portfolios, request quotes, and manage bookings — all in one elegant place.',
+    hero_cta_primary: 'Discover artists',
+    hero_cta_secondary: 'See pricing',
+    hero_countdown_label: 'Next showcase in',
+    hero_stat_1_value: '2w',
+    hero_stat_1_label: 'weeks featured',
+    hero_stat_2_value: '24',
+    hero_stat_2_label: 'total artists',
+    hero_stat_3_value: '63',
+    hero_stat_3_label: 'hours active',
   },
   fr: {
     // General
@@ -314,6 +327,19 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     privacy_label: 'Confidentialité',
     terms_label: 'Conditions',
     copyright_notice: 'Tous droits réservés.',
+    // Hero landing
+    hero_title_line1: 'Luxe parmi les artistes',
+    hero_title_line2: 'Trouvez la correspondance parfaite',
+    hero_subtitle: 'Découvrez des portfolios sélectionnés, demandez des devis et gérez les réservations — le tout au même endroit.',
+    hero_cta_primary: 'Découvrir les artistes',
+    hero_cta_secondary: 'Voir les tarifs',
+    hero_countdown_label: 'Prochaine vitrine dans',
+    hero_stat_1_value: '2 sem',
+    hero_stat_1_label: 'semaines à la une',
+    hero_stat_2_value: '24',
+    hero_stat_2_label: "artistes au total",
+    hero_stat_3_value: '63',
+    hero_stat_3_label: 'heures actives',
   }
 }
 

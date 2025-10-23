@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUserRole } from '@/hooks/useUserRole'
 import InkTrailCanvas from '@/components/InkTrailCanvas'
 import { useLocale } from '@/hooks/useLocale'
+import HeroLanding from '@/components/HeroLanding'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -23,78 +24,7 @@ export default function LandingPage() {
 
       {/* Content */}
       <div className="relative z-10">
-        <section className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-6 pb-20 pt-8 sm:px-10 sm:pt-16 lg:flex-row lg:gap-14">
-          <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-ink-text-muted">{t('tattoo_but_smarter')}</p>
-            <h1 className="text-balance text-4xl font-extrabold leading-tight text-white sm:text-6xl">
-              {t('where_clients')}
-            </h1>
-            <p className="mt-4 text-pretty text-base leading-relaxed text-ink-text-muted sm:text-lg">
-              {t('discover_description')}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button onClick={() => router.push('/discover')} className="btn btn-primary">
-                {t('discover_artists')}
-              </button>
-              <button onClick={() => router.push('/pricing')} className="btn btn-secondary">
-                {t('see_pricing')}
-              </button>
-            </div>
-          </div>
-
-          {/* Two audience cards */}
-          <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-2xl">
-            <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-xl backdrop-blur-md transition hover:bg-white/10">
-              <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/5 blur-2xl" aria-hidden />
-              <h3 className="text-lg font-extrabold tracking-tight">{t('landing_clients_title') || 'For Clients'}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-text-muted">
-                {t('landing_clients_description') || 'Browse curated portfolios, filter by style and city, and start a secure chat. No spam. No pressure.'}
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-ink-text-muted">
-                <li>• {t('landing_clients_bullet_1') || 'Explore by style or location'}</li>
-                <li>• {t('landing_clients_bullet_2') || 'Private chat without sharing contacts'}</li>
-                <li>• {t('landing_clients_bullet_3') || 'Save favorites and get aftercare tips'}</li>
-              </ul>
-              <div className="mt-6 flex gap-3">
-                <button onClick={() => router.push('/discover')} className="btn btn-primary">{t('landing_clients_find') || 'Find artists'}</button>
-                <button onClick={() => router.push('/map')} className="btn btn-secondary">{t('landing_clients_map') || 'Browse map'}</button>
-              </div>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-xl backdrop-blur-md transition hover:bg-white/10">
-              <div className="absolute -left-8 -bottom-8 h-28 w-28 rounded-full bg-white/5 blur-2xl" aria-hidden />
-              <h3 className="text-lg font-extrabold tracking-tight">{t('landing_artists_title') || 'For Artists'}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-text-muted">
-                {t('landing_artists_description') || 'Get qualified leads, chat with clients, and showcase your portfolio. Keep your business flowing.'}
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-ink-text-muted">
-                <li>• {t('landing_artists_bullet_1') || 'Centralized chat and lead inbox'}</li>
-                <li>• {t('landing_artists_bullet_2') || 'Portfolio and booking tools'}</li>
-                <li>• {t('landing_artists_bullet_3') || 'Flexible plans—free to start'}</li>
-              </ul>
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => router.push(role === 'artist' ? '/leads' : '/login')}
-                  className="btn btn-primary"
-                >
-                  {role === 'artist' ? (t('go_to_your_leads') || 'Go to your leads') : (t('im_an_artist') || "I'm an artist")}
-                </button>
-                <button onClick={() => router.push('/pricing')} className="btn btn-secondary">Plans</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Minimal footer */}
-        <footer className="mx-auto max-w-7xl px-6 pb-10 text-xs text-ink-text-muted sm:px-10">
-          <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
-            <p>© {new Date().getFullYear()} Inkmatching. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <button onClick={() => router.push('/pricing')} className="hover:text-white/90">{t('pricing')}</button>
-              <button onClick={() => router.push('/login')} className="hover:text-white/90">{t('sign_in')}</button>
-            </div>
-          </div>
-        </footer>
+        <HeroLanding />
       </div>
     </main>
   )
