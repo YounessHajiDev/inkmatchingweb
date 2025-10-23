@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [editingProfile, setEditingProfile] = useState<any | null>(null)
   const [leadsList, setLeadsList] = useState<any[]>([])
   const [bookingsList, setBookingsList] = useState<any[]>([])
+  const [paymentsList, setPaymentsList] = useState<any[]>([])
 
   useEffect(() => {
     if (!user) { setRole(null); return }
@@ -68,7 +69,7 @@ export default function AdminPage() {
       }
     }
     loadUsers()
-    // load full leads & bookings for admin actions
+    // load full leads, bookings & payments for admin actions
     const loadLeadsAndBookings = async () => {
       try {
         const token = await user.getIdToken()
@@ -81,6 +82,14 @@ export default function AdminPage() {
         if (!cancelled) {
           setLeadsList(Array.isArray(leadsJson.leads) ? leadsJson.leads : [])
           setBookingsList(Array.isArray(bookingsJson.bookings) ? bookingsJson.bookings : [])
+        }
+        // payments (may include stripe enrichment)
+        try {
+          const paymentsRes = await fetch('/api/admin/payments/list', { headers: { Authorization: `Bearer ${token}` } })
+          const paymentsJson = await paymentsRes.json()
+          if (!cancelled) setPaymentsList(Array.isArray(paymentsJson.payments) ? paymentsJson.payments : [])
+        } catch (e) {
+          console.error('Unable to load payments', e)
         }
       } catch (e) {
         console.error('Unable to load leads/bookings', e)
@@ -405,6 +414,46 @@ export default function AdminPage() {
               {bookingsList.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No bookings yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Payments view */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Payments</h2>
+          <span className="rounded-full border border-ink-muted/60 px-3 py-1 text-xs uppercase tracking-wide text-gray-500">{paymentsList.length} records</span>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-ink-muted/60">
+          <table className="min-w-full text-sm text-gray-300">
+            <thead className="bg-ink-surface/70 text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-4 py-3 text-left">Booking</th>
+                <th className="px-4 py-3 text-left">Artist</th>
+                <th className="px-4 py-3 text-left">Client</th>
+                <th className="px-4 py-3 text-left">Payment Status</th>
+                <th className="px-4 py-3 text-left">Stripe Status</th>
+                <th className="px-4 py-3 text-left">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-muted/60 bg-ink-surface/40">
+              {paymentsList.map((p) => (
+                <tr key={`${p.artistUid}_${p.bookingId}`} className="hover:bg-ink-surface/70">
+                  <td className="px-4 py-3 text-xs text-gray-300">{p.bookingId}</td>
+                  <td className="px-4 py-3 text-xs text-gray-300">{p.artistUid}</td>
+                  <td className="px-4 py-3 text-white">{p.clientUid}</td>
+                  <td className="px-4 py-3">{p.paymentStatus || 'unknown'}</td>
+                  <td className="px-4 py-3">{p.stripeStatus ?? (p.paymentIntentId ? 'unknown' : 'n/a')}</td>
+                  <td className="px-4 py-3 text-gray-400">{p.amount ? `$${p.amount}` : (p.depositAmount ? `$${p.depositAmount}` : '—')}</td>
+                </tr>
+              ))}
+              {paymentsList.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-gray-500">No payment records found.</td>
                 </tr>
               )}
             </tbody>
