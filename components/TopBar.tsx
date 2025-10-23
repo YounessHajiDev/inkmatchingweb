@@ -48,38 +48,51 @@ export default function TopBar() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-3">
-          {user ? (
-            <Link
-              href="/settings"
-              className="pill hover:border-ink-accent/60 hover:text-white"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white shadow-inner">
-                {initialsFromEmail(user.email)}
-              </span>
-              <span className="hidden text-sm font-semibold text-white sm:block">
-                {user.email}
-              </span>
-              <Cog6ToothIcon className="h-5 w-5 text-ink-accent" />
+        <div className="flex items-center gap-6">
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-ink-text">
+            <Link href="/pricing" className="hover:text-white transition-colors">
+              Pricing
             </Link>
-          ) : (
-            <>
+            <Link href="/discover" className="hover:text-white transition-colors">
+              Discover
+            </Link>
+          </nav>
+
+          {/* Auth Actions */}
+          <div className="flex items-center gap-3">
+            {user ? (
               <Link
-                href="/login"
+                href="/settings"
                 className="pill hover:border-ink-accent/60 hover:text-white"
               >
-                <UserPlusIcon className="h-5 w-5 text-ink-accent" />
-                <span className="hidden text-sm font-semibold text-white sm:block">Join us</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white shadow-inner">
+                  {initialsFromEmail(user.email)}
+                </span>
+                <span className="hidden text-sm font-semibold text-white sm:block">
+                  {user.email}
+                </span>
+                <Cog6ToothIcon className="h-5 w-5 text-ink-accent" />
               </Link>
-              <Link
-                href="/login"
-                className="btn btn-primary"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                <span className="hidden sm:inline">Sign In</span>
-              </Link>
-            </>
-          )}
+            ) : (
+              <>
+                <Link
+                  href="/signup/role"
+                  className="pill hover:border-ink-accent/60 hover:text-white"
+                >
+                  <UserPlusIcon className="h-5 w-5 text-ink-accent" />
+                  <span className="hidden text-sm font-semibold text-white sm:block">Join us</span>
+                </Link>
+                <Link
+                  href="/login"
+                  className="btn btn-primary"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>
