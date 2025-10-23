@@ -81,3 +81,13 @@
  ✓ Compiled in 242ms (302 modules)
  ✓ Compiled in 140ms (686 modules)
  ✓ Compiled in 503ms (700 modules)
+ ✓ Compiled in 1238ms (703 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 241ms
+ ✓ Compiled /icon.svg in 192ms (430 modules)
+ GET /icon.svg?5470a8edf836094e 200 in 254ms
+ ✓ Compiled in 328ms (303 modules)
+ ✓ Compiled in 1113ms (303 modules)
+ ✓ Compiled in 624ms (735 modules)
+ ✓ Compiled in 526ms (721 modules)
+ ✓ Compiled in 316ms (705 modules)

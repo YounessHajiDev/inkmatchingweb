@@ -156,6 +156,10 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     open_artist_portfolio_image_aria: 'Open artist {name} portfolio image {index}',
     work_image_alt: 'Work {index}',
     please_login: 'Please login to continue.',
+    about_label: 'About',
+    privacy_label: 'Privacy',
+    terms_label: 'Terms',
+    copyright_notice: 'All rights reserved.',
   },
   fr: {
     // General
@@ -306,6 +310,10 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     open_artist_portfolio_image_aria: "Ouvrir l'image de portfolio de l'artiste {name} numéro {index}",
     work_image_alt: 'Œuvre {index}',
     please_login: 'Veuillez vous connecter pour continuer.',
+    about_label: 'À propos',
+    privacy_label: 'Confidentialité',
+    terms_label: 'Conditions',
+    copyright_notice: 'Tous droits réservés.',
   }
 }
 
