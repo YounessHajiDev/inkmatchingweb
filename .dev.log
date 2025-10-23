@@ -1,0 +1,83 @@
+
+> inkmatching-web@1.0.0 dev
+> next dev
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1591ms
+ ○ Compiling /api/subscriptions/create-checkout ...
+ ✓ Compiled /api/subscriptions/create-checkout in 517ms (308 modules)
+ GET /api/subscriptions/create-checkout 200 in 1552ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 2.5s (668 modules)
+ GET /dashboard/campaigns 404 in 3197ms
+ ✓ Compiled in 641ms (301 modules)
+ GET /dashboard/campaigns 404 in 18ms
+ ✓ Compiled / in 280ms (689 modules)
+ GET / 200 in 417ms
+ ✓ Compiled /icon.svg in 150ms (429 modules)
+ GET /icon.svg?5470a8edf836094e 200 in 217ms
+ GET /dashboard/campaigns 404 in 107ms
+ GET /dashboard/settings 404 in 15ms
+ ✓ Compiled in 392ms (302 modules)
+ ✓ Compiled in 292ms (302 modules)
+ ✓ Compiled in 242ms (686 modules)
+ ✓ Compiled in 95ms (686 modules)
+ ✓ Compiled in 313ms (302 modules)
+ ✓ Compiled in 222ms (302 modules)
+ ✓ Compiled in 292ms (302 modules)
+ ✓ Compiled in 147ms (302 modules)
+ ✓ Compiled in 855ms (686 modules)
+ ✓ Compiled in 306ms (302 modules)
+ ✓ Compiled in 320ms (686 modules)
+ ✓ Compiled in 388ms (302 modules)
+ ✓ Compiled in 166ms (302 modules)
+ ✓ Compiled in 285ms (686 modules)
+ ✓ Compiled in 1602ms (700 modules)
+ ✓ Compiled in 416ms (700 modules)
+ ✓ Compiled in 375ms (686 modules)
+ ✓ Compiled in 70ms (686 modules)
+ ✓ Compiled in 600ms (686 modules)
+ ✓ Compiled in 112ms (686 modules)
+ ✓ Compiled in 424ms (302 modules)
+ ✓ Compiled in 603ms (700 modules)
+ ✓ Compiled in 244ms (700 modules)
+ ✓ Compiled in 360ms (700 modules)
+ ✓ Compiled in 268ms (700 modules)
+ ✓ Compiled in 226ms (686 modules)
+ ✓ Compiled in 187ms (686 modules)
+ ✓ Compiled in 350ms (686 modules)
+ ✓ Compiled in 195ms (686 modules)
+ ✓ Compiled in 289ms (686 modules)
+ ✓ Compiled in 282ms (302 modules)
+ ✓ Compiled in 226ms (302 modules)
+ ✓ Compiled in 315ms (686 modules)
+ ✓ Compiled in 353ms (302 modules)
+ ✓ Compiled in 154ms (302 modules)
+ ✓ Compiled in 544ms (302 modules)
+ ✓ Compiled in 185ms (302 modules)
+ ✓ Compiled in 203ms (302 modules)
+ ✓ Compiled in 158ms (302 modules)
+ ✓ Compiled in 247ms (302 modules)
+ ✓ Compiled in 144ms (302 modules)
+ ✓ Compiled in 3.4s (302 modules)
+ ✓ Compiled in 326ms (302 modules)
+ ✓ Compiled in 456ms (302 modules)
+ ✓ Compiled in 190ms (302 modules)
+ ✓ Compiled in 295ms (302 modules)
+ ✓ Compiled in 199ms (302 modules)
+ ✓ Compiled in 129ms (302 modules)
+ ✓ Compiled in 448ms (700 modules)
+ ✓ Compiled in 364ms (686 modules)
+ ✓ Compiled in 196ms (302 modules)
+ ✓ Compiled in 279ms (302 modules)
+ ✓ Compiled in 810ms (700 modules)
+ ✓ Compiled in 301ms (686 modules)
+ ✓ Compiled in 425ms (302 modules)
+ ✓ Compiled in 416ms (686 modules)
+ ✓ Compiled in 242ms (302 modules)
+ ✓ Compiled in 140ms (686 modules)
+ ✓ Compiled in 503ms (700 modules)

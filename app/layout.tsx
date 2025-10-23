@@ -3,7 +3,12 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
 import AppShell from '@/components/AppShell'
-import LocaleWrapper from '@/components/LocaleWrapper'
+
+// Simple LocaleWrapper fallback if the module is missing.
+// Keeps layout working while a dedicated component file is added.
+function LocaleWrapper({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
+}
 
 const inter = Inter({ subsets: ['latin'] })
 

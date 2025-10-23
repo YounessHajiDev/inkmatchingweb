@@ -7,11 +7,13 @@ import { auth, db } from '@/lib/firebaseClient'
 import { ref, set } from 'firebase/database'
 import { saveMyPublicProfile } from '@/lib/publicProfiles'
 import type { UserRole } from '@/types'
+import { useLocale } from '@/hooks/useLocale'
 
 function SignupCompleteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const role = searchParams.get('role') as UserRole | null
+  const { t } = useLocale()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -90,17 +92,32 @@ function SignupCompleteContent() {
       if (role === 'artist' && selectedPlan !== 'free' && typeof window !== 'undefined') {
         // Call backend to create checkout session
         const billing = (sessionStorage.getItem('selectedBilling') as 'monthly' | 'yearly') || 'monthly'
-        const res = await fetch(`/api/subscriptions/create-checkout?tier=${selectedPlan}&billing=${billing}`)
-        const data = await res.json()
-        if (data?.url) {
-          // Clear session storage (we will finalize after return)
-          sessionStorage.removeItem('selectedBilling')
-          // redirect to stripe checkout
-          window.location.href = data.url
-          return
-        } else {
-          console.error('Stripe checkout creation failed', data)
-          // continue with signup but mark as free fallback
+        try {
+          // Get a fresh ID token from the newly created credential user
+          const idToken = await credential.user.getIdToken()
+
+          const res = await fetch('/api/subscriptions/create-checkout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ tier: selectedPlan, billing }),
+          })
+
+          const data = await res.json()
+          if (data?.url) {
+            // Clear session storage (we will finalize after return)
+            sessionStorage.removeItem('selectedBilling')
+            // redirect to stripe checkout
+            window.location.href = data.url
+            return
+          } else {
+            console.error('Stripe checkout creation failed', data)
+            // continue with signup but mark as free fallback
+          }
+        } catch (e) {
+          console.error('Failed to create checkout session', e)
         }
       }
 
@@ -151,11 +168,11 @@ function SignupCompleteContent() {
             {/* Header */}
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold text-white">
-                Create Your Account
+                {t('create_account')}
               </h1>
               <p className="text-sm text-ink-text-muted">
                 {role === 'artist' 
-                  ? `You&apos;re signing up as an Artist with the ${selectedPlan === 'free' ? 'Free' : selectedPlan === 'pro' ? 'Pro' : 'Premium'} plan`
+                  ? `You&apos;re signing up as an Artist with the ${selectedPlan === 'free' ? t('free') : selectedPlan === 'pro' ? 'Pro' : 'Premium'} plan`
                   : "You&apos;re signing up as a Client"}
               </p>
             </div>
@@ -163,7 +180,7 @@ function SignupCompleteContent() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="label">Display name</label>
+                <label className="label">{t('display_name')}</label>
                 <input
                   className="input"
                   value={displayName}
@@ -174,7 +191,7 @@ function SignupCompleteContent() {
               </div>
 
               <div>
-                <label className="label">Email</label>
+                <label className="label">{t('email')}</label>
                 <input
                   type="email"
                   className="input"
@@ -186,7 +203,7 @@ function SignupCompleteContent() {
               </div>
 
               <div>
-                <label className="label">Password</label>
+                <label className="label">{t('password')}</label>
                 <input
                   type="password"
                   className="input"
@@ -199,7 +216,7 @@ function SignupCompleteContent() {
               </div>
 
               <div>
-                <label className="label">Confirm password</label>
+                <label className="label">{t('confirm_password')}</label>
                 <input
                   type="password"
                   className="input"
@@ -222,7 +239,7 @@ function SignupCompleteContent() {
                 disabled={loading}
                 className="btn btn-primary w-full py-3 text-base"
               >
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? t('creating_account') : t('create_account_button')}
               </button>
             </form>
 
@@ -231,7 +248,7 @@ function SignupCompleteContent() {
               onClick={() => router.back()}
               className="w-full rounded-full border border-white/10 bg-white/[0.04] py-3 text-sm font-semibold text-ink-text-muted transition hover:text-white"
             >
-              ← Back
+              ← {t('back')}
             </button>
           </div>
         </div>

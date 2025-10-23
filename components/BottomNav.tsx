@@ -6,42 +6,43 @@ import { SparklesIcon, MapIcon, PencilSquareIcon, ChatBubbleOvalLeftEllipsisIcon
 import clsx from 'clsx'
 import { useAuth } from '@/components/AuthProvider'
 import { useUserRole } from '@/hooks/useUserRole'
+import { useLocale } from '@/hooks/useLocale'
 
 interface NavItem {
   href: string
-  label: string
+  label: string // translation key
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   exact?: boolean
 }
 
 const guestNav: NavItem[] = [
-  { href: '/', label: 'Discover', icon: SparklesIcon },
-  { href: '/map', label: 'Explore', icon: MapIcon },
-  { href: '/stencils', label: 'Stencils', icon: PencilSquareIcon },
+  { href: '/', label: 'discover_label', icon: SparklesIcon },
+  { href: '/map', label: 'map_label', icon: MapIcon },
+  { href: '/stencils', label: 'stencils_label', icon: PencilSquareIcon },
 ]
 
 const clientNav: NavItem[] = [
-  { href: '/', label: 'Discover', icon: SparklesIcon },
-  { href: '/map', label: 'Explore', icon: MapIcon },
-  { href: '/stencils', label: 'Stencils', icon: PencilSquareIcon },
-  { href: '/aftercare', label: 'Aftercare', icon: HeartIcon },
-  { href: '/chat', label: 'Chat', icon: ChatBubbleOvalLeftEllipsisIcon },
+  { href: '/', label: 'discover_label', icon: SparklesIcon },
+  { href: '/map', label: 'map_label', icon: MapIcon },
+  { href: '/stencils', label: 'stencils_label', icon: PencilSquareIcon },
+  { href: '/aftercare', label: 'aftercare_label', icon: HeartIcon },
+  { href: '/chat', label: 'chat_label', icon: ChatBubbleOvalLeftEllipsisIcon },
 ]
 
 const artistNav: NavItem[] = [
-  { href: '/leads', label: 'Leads', icon: InboxIcon },
-  { href: '/calendar', label: 'Calendar', icon: CalendarDaysIcon },
-  { href: '/stencils', label: 'Stencils', icon: PencilSquareIcon },
-  { href: '/aftercare', label: 'Aftercare', icon: HeartIcon },
-  { href: '/chat', label: 'Chat', icon: ChatBubbleOvalLeftEllipsisIcon },
+  { href: '/leads', label: 'leads_label', icon: InboxIcon },
+  { href: '/calendar', label: 'calendar_label', icon: CalendarDaysIcon },
+  { href: '/stencils', label: 'stencils_label', icon: PencilSquareIcon },
+  { href: '/aftercare', label: 'aftercare_label', icon: HeartIcon },
+  { href: '/chat', label: 'chat_label', icon: ChatBubbleOvalLeftEllipsisIcon },
 ]
 
 const adminNav: NavItem[] = [
-  { href: '/', label: 'Discover', icon: SparklesIcon },
-  { href: '/map', label: 'Explore', icon: MapIcon },
-  { href: '/stencils', label: 'Stencils', icon: PencilSquareIcon },
-  { href: '/chat', label: 'Chat', icon: ChatBubbleOvalLeftEllipsisIcon },
-  { href: '/admin', label: 'Admin', icon: Cog6ToothIcon },
+  { href: '/', label: 'discover_label', icon: SparklesIcon },
+  { href: '/map', label: 'map_label', icon: MapIcon },
+  { href: '/stencils', label: 'stencils_label', icon: PencilSquareIcon },
+  { href: '/chat', label: 'chat_label', icon: ChatBubbleOvalLeftEllipsisIcon },
+  { href: '/admin', label: 'admin_label', icon: Cog6ToothIcon },
 ]
 
 function navFor(role: string | null, authenticated: boolean): NavItem[] {
@@ -56,6 +57,7 @@ export default function BottomNav() {
   const pathname = usePathname()
   const { user } = useAuth()
   const { role } = useUserRole()
+  const { t } = useLocale()
 
   // Hide bottom nav when user is not logged in
   if (!user) return null
@@ -91,7 +93,7 @@ export default function BottomNav() {
                   <Icon className={clsx('h-5 w-5', isActive ? 'text-white' : 'text-ink-text-muted group-hover:text-white')} />
                 </span>
               </span>
-              <span>{item.label}</span>
+              <span>{t(item.label) || item.label}</span>
             </Link>
           )
         })}

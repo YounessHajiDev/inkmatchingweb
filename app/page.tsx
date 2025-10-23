@@ -46,38 +46,38 @@ export default function LandingPage() {
           <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-2xl">
             <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-xl backdrop-blur-md transition hover:bg-white/10">
               <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/5 blur-2xl" aria-hidden />
-              <h3 className="text-lg font-extrabold tracking-tight">For Clients</h3>
+              <h3 className="text-lg font-extrabold tracking-tight">{t('landing_clients_title') || 'For Clients'}</h3>
               <p className="mt-2 text-sm leading-relaxed text-ink-text-muted">
-                Browse curated portfolios, filters by style and city, and start a secure chat. No spam. No pressure.
+                {t('landing_clients_description') || 'Browse curated portfolios, filter by style and city, and start a secure chat. No spam. No pressure.'}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-ink-text-muted">
-                <li>• Explore by style or location</li>
-                <li>• Private chat without sharing contacts</li>
-                <li>• Save favorites and get aftercare tips</li>
+                <li>• {t('landing_clients_bullet_1') || 'Explore by style or location'}</li>
+                <li>• {t('landing_clients_bullet_2') || 'Private chat without sharing contacts'}</li>
+                <li>• {t('landing_clients_bullet_3') || 'Save favorites and get aftercare tips'}</li>
               </ul>
               <div className="mt-6 flex gap-3">
-                <button onClick={() => router.push('/discover')} className="btn btn-primary">Find artists</button>
-                <button onClick={() => router.push('/map')} className="btn btn-secondary">Browse map</button>
+                <button onClick={() => router.push('/discover')} className="btn btn-primary">{t('landing_clients_find') || 'Find artists'}</button>
+                <button onClick={() => router.push('/map')} className="btn btn-secondary">{t('landing_clients_map') || 'Browse map'}</button>
               </div>
             </div>
 
             <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-xl backdrop-blur-md transition hover:bg-white/10">
               <div className="absolute -left-8 -bottom-8 h-28 w-28 rounded-full bg-white/5 blur-2xl" aria-hidden />
-              <h3 className="text-lg font-extrabold tracking-tight">For Artists</h3>
+              <h3 className="text-lg font-extrabold tracking-tight">{t('landing_artists_title') || 'For Artists'}</h3>
               <p className="mt-2 text-sm leading-relaxed text-ink-text-muted">
-                Get qualified leads, chat with clients, and showcase your portfolio. Keep your business flowing.
+                {t('landing_artists_description') || 'Get qualified leads, chat with clients, and showcase your portfolio. Keep your business flowing.'}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-ink-text-muted">
-                <li>• Centralized chat and lead inbox</li>
-                <li>• Portfolio and booking tools</li>
-                <li>• Flexible plans—free to start</li>
+                <li>• {t('landing_artists_bullet_1') || 'Centralized chat and lead inbox'}</li>
+                <li>• {t('landing_artists_bullet_2') || 'Portfolio and booking tools'}</li>
+                <li>• {t('landing_artists_bullet_3') || 'Flexible plans—free to start'}</li>
               </ul>
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => router.push(role === 'artist' ? '/leads' : '/login')}
                   className="btn btn-primary"
                 >
-                  {role === 'artist' ? 'Go to your leads' : "I'm an artist"}
+                  {role === 'artist' ? (t('go_to_your_leads') || 'Go to your leads') : (t('im_an_artist') || "I'm an artist")}
                 </button>
                 <button onClick={() => router.push('/pricing')} className="btn btn-secondary">Plans</button>
               </div>
@@ -90,8 +90,8 @@ export default function LandingPage() {
           <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
             <p>© {new Date().getFullYear()} Inkmatching. All rights reserved.</p>
             <div className="flex items-center gap-4">
-              <button onClick={() => router.push('/pricing')} className="hover:text-white/90">Pricing</button>
-              <button onClick={() => router.push('/login')} className="hover:text-white/90">Sign in</button>
+              <button onClick={() => router.push('/pricing')} className="hover:text-white/90">{t('pricing')}</button>
+              <button onClick={() => router.push('/login')} className="hover:text-white/90">{t('sign_in')}</button>
             </div>
           </div>
         </footer>

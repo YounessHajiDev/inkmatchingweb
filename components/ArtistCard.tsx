@@ -6,11 +6,13 @@ import { useAuth } from './AuthProvider'
 import { ensureOneToOneThread, sendText } from '@/lib/realtime'
 import type { ArtistWithProfile } from '@/types'
 import { useState } from 'react'
+import { useLocale } from '@/hooks/useLocale'
 
 export default function ArtistCard({ artist }: { artist: ArtistWithProfile }) {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const { t, tFormat } = useLocale()
 
   const handleMessage = async () => {
     if (!user) { router.push('/login'); return }
@@ -28,7 +30,7 @@ export default function ArtistCard({ artist }: { artist: ArtistWithProfile }) {
     <article className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-transparent p-5 shadow-xl backdrop-blur-md transition-all duration-300 hover:border-ink-accent/40 hover:shadow-2xl hover:shadow-ink-accent/10">
       <div className="absolute inset-0 bg-gradient-to-br from-ink-accent/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
       <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-ink-accent/5 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
-      <div className="relative z-10 space-y-4">
+  <div className="relative z-10 space-y-4">
         <div className="relative h-48 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-lg">
           {artist.coverURL ? (
             <Image src={artist.coverURL} alt={artist.displayName} fill className="object-cover transition duration-700 group-hover:scale-110" />
@@ -56,9 +58,9 @@ export default function ArtistCard({ artist }: { artist: ArtistWithProfile }) {
                 <button
                   onClick={() => router.push(`/artist/${artist.uid}`)}
                   className="absolute inset-0"
-                  aria-label={`Open artist ${artist.displayName} portfolio image ${i + 1}`}
+                  aria-label={tFormat('open_artist_portfolio_image_aria', { name: artist.displayName, index: i + 1 })}
                 />
-                <Image src={url} alt={`Work ${i + 1}`} fill className="object-cover transition duration-500 group-hover/img:scale-110" />
+                <Image src={url} alt={tFormat('work_image_alt', { index: i + 1 }) || `Work ${i + 1}`} fill className="object-cover transition duration-500 group-hover/img:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover/img:opacity-100" />
               </div>
             ))}
@@ -89,15 +91,16 @@ export default function ArtistCard({ artist }: { artist: ArtistWithProfile }) {
           className="btn btn-primary group/btn relative w-full overflow-hidden shadow-lg shadow-ink-accent/20 transition-all hover:shadow-xl hover:shadow-ink-accent/30"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            {loading ? (
-              <>
+                {loading ? (
+              <> 
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Opening chat…
+                { /* keep this English fallback; localized via t() below */ }
+                {t('opening_chat') || 'Opening chat…'}
               </>
             ) : (
               <>
                 <ChatIcon className="h-4 w-4 transition-transform group-hover/btn:scale-110" />
-                Start a conversation
+                {t('start_a_conversation') || 'Start a conversation'}
               </>
             )}
           </span>

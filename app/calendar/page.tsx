@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useLocale } from '@/hooks/useLocale'
 import { useAuth } from '@/components/AuthProvider'
 import { addEvent, deleteEvent, listEvents, type LegacyCalendarEvent } from '@/lib/calendar'
 import { getPublicProfile } from '@/lib/publicProfiles'
@@ -38,9 +39,11 @@ export default function CalendarPage() {
     listBookingsForArtist(user.uid).then(setBookings).catch(console.error)
   }, [role, user])
 
-  if (loading) return <div className="p-8 text-ink-text-muted">Loading…</div>
-  if (!user) return <div className="p-8 text-ink-text-muted">Please login to see your calendar.</div>
-  if (role && role !== 'artist') return <div className="p-8 text-ink-text-muted">Calendars are available for artist accounts. Switch to an artist profile to manage availability.</div>
+  const { t } = useLocale()
+
+  if (loading) return <div className="p-8 text-ink-text-muted">{t('loading')}</div>
+  if (!user) return <div className="p-8 text-ink-text-muted">{t('please_login')}</div>
+  if (role && role !== 'artist') return <div className="p-8 text-ink-text-muted">{t('calendar_artist_only') || 'Calendars are available for artist accounts. Switch to an artist profile to manage availability.'}</div>
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,7 +69,7 @@ export default function CalendarPage() {
       <section className="space-y-3 rounded-4xl border border-white/10 bg-white/[0.04] p-6 shadow-glow-soft backdrop-blur-md sm:p-8">
         <p className="text-xs uppercase tracking-[0.4em] text-ink-text-muted">Calendar</p>
         <h1 className="text-3xl font-semibold text-white">{monthLabel}</h1>
-        <p className="text-sm text-ink-text-muted">Keep your confirmed bookings and personal holds aligned. Everything stays inside InkMatching.</p>
+  <p className="text-sm text-ink-text-muted">{t('calendar_description') || 'Keep your confirmed bookings and personal holds aligned. Everything stays inside InkMatching.'}</p>
       </section>
 
       {bookings.length > 0 && (

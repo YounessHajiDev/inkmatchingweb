@@ -7,10 +7,12 @@ import ArtistCard from '@/components/ArtistCard'
 import type { ArtistWithProfile } from '@/types'
 import { AdjustmentsHorizontalIcon, FunnelIcon, MagnifyingGlassIcon, StarIcon } from '@heroicons/react/24/outline'
 import { useUserRole } from '@/hooks/useUserRole'
+import { useLocale } from '@/hooks/useLocale'
 
 export default function DiscoverPage() {
   const router = useRouter()
   const { role } = useUserRole()
+  const { t } = useLocale()
   const [artists, setArtists] = useState<ArtistWithProfile[]>([])
   const [filteredArtists, setFilteredArtists] = useState<ArtistWithProfile[]>([])
   const [search, setSearch] = useState('')
@@ -193,18 +195,18 @@ export default function DiscoverPage() {
             <div className="max-w-3xl">
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-ink-accent">
                 <SparklesIcon className="h-4 w-4" />
-                Discover
+                {t('discover_label')}
               </p>
               <h1 className="mt-3 bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl lg:text-6xl">
-                Find your next tattoo artist
+                {t('find_your_next_tattoo_artist')}
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-text-muted/90">
-                Browse curated portfolios, explore by style or city, and start a conversation without sharing your personal contact details.
+                {t('discover_description_short')}
               </p>
             </div>
             <button className="btn btn-primary group shrink-0 shadow-lg shadow-ink-accent/20 hover:shadow-xl hover:shadow-ink-accent/30">
               <SparklesIcon className="h-5 w-5 transition group-hover:rotate-12" />
-              Curate feed
+              {t('curate_feed')}
             </button>
           </div>
 
@@ -213,7 +215,7 @@ export default function DiscoverPage() {
               <MagnifyingGlassIcon className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-text-muted transition" />
               <input
                 type="text"
-                placeholder="Search artists, styles, cities…"
+                placeholder={t('search_artists_placeholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="input w-full rounded-2xl border-white/5 bg-white/[0.03] pl-12 pr-4 transition-all duration-200 placeholder:text-ink-text-muted/60 focus:border-ink-accent/30 focus:bg-white/[0.05] focus:shadow-lg focus:shadow-ink-accent/5"
@@ -225,7 +227,7 @@ export default function DiscoverPage() {
                 className="btn btn-secondary group border-white/10 bg-white/[0.05] shadow-md transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg"
               >
                 <FunnelIcon className="h-5 w-5 transition group-hover:scale-110" />
-                Filters
+                {t('filters_label')}
                 {(selectedCity || selectedStyle || selectedRating !== null) && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink-accent text-xs font-bold text-white">
                     {[selectedCity, selectedStyle, selectedRating].filter(Boolean).length}
@@ -237,13 +239,13 @@ export default function DiscoverPage() {
                 className="btn btn-secondary group border-white/10 bg-white/[0.05] shadow-md transition-all hover:border-ink-accent/30 hover:bg-white/[0.08] hover:shadow-lg"
               >
                 <AdjustmentsHorizontalIcon className="h-5 w-5 transition group-hover:scale-110" />
-                Sort
+                {t('sort_label')}
               </button>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
               {filterChips.map((chip, idx) => (
                 <button
                   key={chip.label}
@@ -276,7 +278,7 @@ export default function DiscoverPage() {
               className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] px-5 py-2.5 text-sm font-semibold shadow-md backdrop-blur-sm transition-all hover:border-ink-accent/40 hover:bg-white/[0.08] hover:shadow-lg"
             >
               <span className={`transition-colors ${showNearMe ? 'text-ink-accent' : 'text-ink-text-muted group-hover:text-white'}`}>
-                Near me
+                {t('near_me')}
               </span>
               <span
                 data-state={showNearMe ? 'on' : 'off'}
@@ -291,10 +293,10 @@ export default function DiscoverPage() {
       </section>
 
       {loading ? (
-        <div className="flex min-h-[320px] items-center justify-center">
+            <div className="flex min-h-[320px] items-center justify-center">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/10 border-t-ink-accent" />
-            <span className="text-ink-text-muted">Loading artists…</span>
+            <span className="text-ink-text-muted">{t('loading_artists') || 'Loading artists…'}</span>
           </div>
         </div>
       ) : filteredArtists.length === 0 ? (
@@ -303,8 +305,8 @@ export default function DiscoverPage() {
             <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.05]">
               <MagnifyingGlassIcon className="h-8 w-8 text-ink-text-muted/50" />
             </div>
-            <p className="text-lg font-semibold text-white">No artists found</p>
-            <p className="mt-2 text-sm text-ink-text-muted">Try adjusting your search or filters to discover more artists.</p>
+            <p className="text-lg font-semibold text-white">{t('no_artists_found') || 'No artists found'}</p>
+            <p className="mt-2 text-sm text-ink-text-muted">{t('try_adjusting_search_or_filters') || 'Try adjusting your search or filters to discover more artists.'}</p>
           </div>
         </div>
       ) : (
