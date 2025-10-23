@@ -16,8 +16,8 @@ type Props = {
 export default function InkTrailCanvas({
   className,
   skinColor = '#F7EFE7', // warm, light skin tone
-  inkColor = 'rgba(10,10,10,0.9)',
-  fadeAlpha = 0.06,
+  inkColor = 'rgba(10,10,10,0.95)',
+  fadeAlpha = 0.04, // slower fade for persistent thin lines
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const mouseRef = useRef({ x: -9999, y: -9999, vx: 0, vy: 0 })
@@ -62,19 +62,24 @@ export default function InkTrailCanvas({
     ctx.fillStyle = skinColor
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    const splat = (x: number, y: number, strength: number) => {
-      // draw multiple blurred circles with darken to feel like ink soaking
+    const splat = (x: number, y: number, pressure: number) => {
+      // Thin, realistic tattoo needle line with subtle bleeding
       ctx.globalCompositeOperation = 'darken'
+      
+      // Main thin line with sharp opacity
       ctx.fillStyle = inkColor
-      const blobs = 4 + Math.floor(Math.random() * 4)
-      for (let i = 0; i < blobs; i++) {
-        const r = 6 + Math.random() * 18 * strength
-        const ox = (Math.random() - 0.5) * 16 * strength
-        const oy = (Math.random() - 0.5) * 16 * strength
-        ctx.beginPath()
-        ctx.ellipse(x + ox, y + oy, r, r * (0.7 + Math.random() * 0.6), Math.random() * Math.PI, 0, Math.PI * 2)
-        ctx.fill()
-      }
+      const lineWidth = 1.2 + pressure * 0.6 // Very thin: 1.2-1.8px
+      ctx.beginPath()
+      ctx.arc(x, y, lineWidth, 0, Math.PI * 2)
+      ctx.fill()
+      
+      // Subtle ink bleeding (minimal)
+      ctx.fillStyle = 'rgba(10,10,10,0.15)'
+      const bleedRadius = lineWidth + 0.8
+      ctx.beginPath()
+      ctx.arc(x, y, bleedRadius, 0, Math.PI * 2)
+      ctx.fill()
+      
       ctx.globalCompositeOperation = 'source-over'
     }
 
@@ -95,13 +100,16 @@ export default function InkTrailCanvas({
       const { x, y, vx, vy } = mouseRef.current
       if (x > -1000) {
         const speed = Math.hypot(vx, vy)
-        // spacing proportional to speed for a more organic trail
-        const steps = 1 + Math.floor(speed / 6)
+        // Thin, continuous line like a tattoo needle
+        // More interpolation points for smooth, connected line
+        const steps = Math.max(2, Math.ceil(speed / 2))
         for (let i = 0; i < steps; i++) {
-          const ix = x - (vx * (i / steps))
-          const iy = y - (vy * (i / steps))
-          const strength = 0.6 + Math.random() * 0.7
-          splat(ix, iy, strength)
+          const t = i / steps
+          const ix = x - (vx * t)
+          const iy = y - (vy * t)
+          // Slight pressure variation based on speed
+          const pressure = Math.min(1, 0.4 + speed * 0.02)
+          splat(ix, iy, pressure)
         }
       }
 
