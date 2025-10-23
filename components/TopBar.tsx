@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'
 import { ArrowRightOnRectangleIcon, Cog6ToothIcon, PaperAirplaneIcon, PlusCircleIcon, UserCircleIcon, UserPlusIcon } from '@heroicons/react/24/outline'
 import { useLocale } from '@/hooks/useLocale'
+import { getPublicProfile } from '@/lib/publicProfiles'
+import { useEffect, useState } from 'react'
 import { useUserRole } from '@/hooks/useUserRole'
 
 function initialsFromEmail(email?: string | null) {
@@ -35,6 +37,26 @@ export default function TopBar() {
     return <PaperAirplaneIcon className="h-5 w-5" />
   }, [pathname])
   const { locale, setLocale, t } = useLocale()
+  const [isPublic, setIsPublic] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      if (!user || role !== 'artist') {
+        setIsPublic(null)
+        return
+      }
+      try {
+        const p = await getPublicProfile(user.uid)
+        if (cancelled) return
+        setIsPublic(Boolean(p?.isPublic))
+      } catch (e) {
+        console.error('Failed to load public profile status', e)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [user, role])
 
   return (
     <header className="relative z-30 border-b border-white/5 bg-white/[0.02] backdrop-blur-lg">
@@ -53,12 +75,22 @@ export default function TopBar() {
         <div className="flex items-center gap-6">
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-ink-text">
-            <Link href="/pricing" className="hover:text-white transition-colors">
-              {t('pricing')}
-            </Link>
-            <Link href="/discover" className="hover:text-white transition-colors">
-              {t('discover')}
-            </Link>
+            {role === 'artist' && user ? (
+              // Show My Public Profile for artists
+              <Link href="/artist/setup" className="flex items-center gap-2 hover:text-white transition-colors">
+                <span className={`h-3 w-3 rounded-full ${isPublic ? 'bg-green-400' : 'bg-red-500'} inline-block`} aria-hidden />
+                <span>{t('my_public_profile')}</span>
+              </Link>
+            ) : (
+              <>
+                <Link href="/pricing" className="hover:text-white transition-colors">
+                  {t('pricing')}
+                </Link>
+                <Link href="/discover" className="hover:text-white transition-colors">
+                  {t('discover')}
+                </Link>
+              </>
+            )}
             {/* Language selector */}
             <div className="relative">
               <select

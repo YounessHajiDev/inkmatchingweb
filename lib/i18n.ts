@@ -17,6 +17,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     appearance: 'Appearance',
     language: 'Language',
     preferences: 'Preferences',
+    my_public_profile: 'My Public Profile',
   },
   fr: {
     pricing: 'Tarifs',
@@ -32,6 +33,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     appearance: 'Apparence',
     language: 'Langue',
     preferences: 'Préférences',
+    my_public_profile: 'Mon profil public',
   }
 }
 
