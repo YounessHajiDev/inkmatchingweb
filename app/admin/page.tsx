@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [leadsList, setLeadsList] = useState<any[]>([])
   const [bookingsList, setBookingsList] = useState<any[]>([])
   const [paymentsList, setPaymentsList] = useState<any[]>([])
+  const [logs, setLogs] = useState<any[]>([])
 
   useEffect(() => {
     if (!user) { setRole(null); return }
@@ -96,6 +97,23 @@ export default function AdminPage() {
       }
     }
     loadLeadsAndBookings()
+    return () => { cancelled = true }
+  }, [role, user])
+
+  useEffect(() => {
+    if (!user || role !== 'admin') return
+    let cancelled = false
+    const loadLogs = async () => {
+      try {
+        const token = await user.getIdToken()
+        const res = await fetch('/api/admin/logs/list', { headers: { Authorization: `Bearer ${token}` } })
+        const json = await res.json()
+        if (!cancelled && Array.isArray(json.logs)) setLogs(json.logs)
+      } catch (e) {
+        console.error('Unable to load admin logs', e)
+      }
+    }
+    loadLogs()
     return () => { cancelled = true }
   }, [role, user])
 
@@ -458,6 +476,26 @@ export default function AdminPage() {
               )}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* Audit logs */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Admin audit logs</h2>
+          <span className="rounded-full border border-ink-muted/60 px-3 py-1 text-xs uppercase tracking-wide text-gray-500">{logs.length} entries</span>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-ink-muted/60 bg-ink-surface/40 p-4">
+          <ul className="divide-y divide-ink-muted/60">
+            {logs.map((l) => (
+              <li key={l.id} className="py-3">
+                <div className="text-xs text-gray-400">{new Date(l.ts).toLocaleString()}</div>
+                <div className="text-sm text-white">{l.actor} — <span className="font-medium">{l.action}</span> {l.target ? `on ${l.target}` : ''}</div>
+                {l.details && <pre className="mt-2 max-w-full overflow-auto text-xs text-gray-300">{JSON.stringify(l.details)}</pre>}
+              </li>
+            ))}
+            {logs.length === 0 && <li className="py-6 text-center text-gray-500">No admin logs yet.</li>}
+          </ul>
         </div>
       </section>
 
