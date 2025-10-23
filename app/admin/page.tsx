@@ -13,6 +13,9 @@ export default function AdminPage() {
   const [leadSummary, setLeadSummary] = useState<{ total: number; open: number } | null>(null)
   const [bookingSummary, setBookingSummary] = useState<{ total: number; pending: number; awaitingDeposit: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [users, setUsers] = useState<Array<{ uid: string; email?: string | null; displayName?: string | null; customClaims?: any }>>([])
+  const [editingUid, setEditingUid] = useState<string | null>(null)
+  const [editingProfile, setEditingProfile] = useState<any | null>(null)
 
   useEffect(() => {
     if (!user) { setRole(null); return }
@@ -51,8 +54,92 @@ export default function AdminPage() {
       }
     }
     load()
+    // also load auth users list for user-level actions
+    const loadUsers = async () => {
+      try {
+        const token = await user.getIdToken()
+        const res = await fetch('/api/admin/users/list', { headers: { Authorization: `Bearer ${token}` } })
+        const json = await res.json()
+        if (!cancelled && Array.isArray(json.users)) setUsers(json.users)
+      } catch (e) {
+        console.error('Unable to load users', e)
+      }
+    }
+    loadUsers()
     return () => { cancelled = true }
   }, [role, user])
+
+  async function toggleAdmin(uid: string, makeAdmin: boolean) {
+    if (!user) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/users/${uid}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ setAdmin: makeAdmin }),
+      })
+      const json = await res.json()
+      if (json?.success) {
+        setUsers((s) => s.map((u) => (u.uid === uid ? { ...u, customClaims: { ...(u.customClaims || {}), admin: makeAdmin } } : u)))
+      }
+    } catch (e) {
+      console.error(e)
+      setError('Unable to update user role')
+    }
+  }
+
+  async function removeUser(uid: string) {
+    if (!user) return
+    if (!confirm('Delete user and all auth records? This is irreversible.')) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/users/${uid}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json()
+      if (json?.success) {
+        setUsers((s) => s.filter((u) => u.uid !== uid))
+      }
+    } catch (e) {
+      console.error(e)
+      setError('Unable to delete user')
+    }
+  }
+
+  async function startEditProfile(uid: string) {
+    try {
+      const token = await user!.getIdToken()
+      const res = await fetch(`/api/admin/profiles/${uid}`, { headers: { Authorization: `Bearer ${token}` } })
+      const json = await res.json()
+      setEditingUid(uid)
+      setEditingProfile(json.profile ?? { uid })
+    } catch (e) {
+      console.error(e)
+      setError('Unable to load profile for editing')
+    }
+  }
+
+  async function saveEditingProfile() {
+    if (!user || !editingUid || !editingProfile) return
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch(`/api/admin/profiles/${editingUid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(editingProfile),
+      })
+      const json = await res.json()
+      if (json?.success) {
+        setProfiles((s) => s.map((p) => (p.uid === editingUid ? { ...p, ...editingProfile } : p)))
+        setEditingUid(null)
+        setEditingProfile(null)
+      }
+    } catch (e) {
+      console.error(e)
+      setError('Unable to save profile')
+    }
+  }
 
   if (loading) return <div className="p-8 text-gray-400">Loading…</div>
   if (!user) return <div className="p-8 text-gray-400">Please login as an admin.</div>
@@ -86,6 +173,83 @@ export default function AdminPage() {
           </p>
         </div>
       </section>
+
+      {/* Auth users management */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Auth Users</h2>
+          <span className="rounded-full border border-ink-muted/60 px-3 py-1 text-xs uppercase tracking-wide text-gray-500">
+            {users.length} users
+          </span>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-ink-muted/60">
+          <table className="min-w-full text-sm text-gray-300">
+            <thead className="bg-ink-surface/70 text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-left">UID</th>
+                <th className="px-4 py-3 text-left">Admin</th>
+                <th className="px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-muted/60 bg-ink-surface/40">
+              {users.map((u) => (
+                <tr key={u.uid} className="hover:bg-ink-surface/70">
+                  <td className="px-4 py-3">{u.email ?? <span className="text-xs text-gray-500">—</span>}</td>
+                  <td className="px-4 py-3 text-xs text-gray-400">{u.uid}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs ${u.customClaims?.admin ? 'bg-green-600/40 text-green-200' : 'bg-gray-700/30 text-gray-300'}`}>
+                      {u.customClaims?.admin ? 'Admin' : 'User'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => toggleAdmin(u.uid, !u.customClaims?.admin)} className="btn btn-sm">
+                        {u.customClaims?.admin ? 'Revoke' : 'Make admin'}
+                      </button>
+                      <button onClick={() => removeUser(u.uid)} className="btn btn-danger btn-sm">Delete</button>
+                      <button onClick={() => startEditProfile(u.uid)} className="btn btn-ghost btn-sm">Edit profile</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-gray-500">No users found or insufficient privileges.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Profile edit modal (simple) */}
+      {editingUid && editingProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-2xl rounded-lg bg-ink-surface/80 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Editing profile: {editingUid}</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="text-sm text-gray-400">Display name
+                <input className="input mt-1 w-full" value={editingProfile.displayName || ''} onChange={(e) => setEditingProfile({ ...editingProfile, displayName: e.target.value })} />
+              </label>
+              <label className="text-sm text-gray-400">City
+                <input className="input mt-1 w-full" value={editingProfile.city || ''} onChange={(e) => setEditingProfile({ ...editingProfile, city: e.target.value })} />
+              </label>
+              <label className="text-sm text-gray-400">Role
+                <input className="input mt-1 w-full" value={editingProfile.role || ''} onChange={(e) => setEditingProfile({ ...editingProfile, role: e.target.value })} />
+              </label>
+              <label className="text-sm text-gray-400">Styles (comma separated)
+                <input className="input mt-1 w-full" value={Array.isArray(editingProfile.styles) ? editingProfile.styles.join(', ') : (editingProfile.styles || '')} onChange={(e) => setEditingProfile({ ...editingProfile, styles: e.target.value.split(',').map((s: string) => s.trim()) })} />
+              </label>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button className="btn" onClick={() => { setEditingUid(null); setEditingProfile(null) }}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => saveEditingProfile()}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
