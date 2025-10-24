@@ -39,9 +39,39 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 }
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+// Export live bindings that are initialized only in the browser. During SSR or build
+// time we avoid initializing the Firebase client SDK to prevent invalid-api-key errors
+// when NEXT_PUBLIC_FIREBASE_API_KEY is not set in the environment used by the server.
+export let auth: any = null
+export let db: any = null
+export let storage: any = null
+export let firebaseApp: any = null
+export default firebaseApp
 
-export const auth = getAuth(app)
-export const db = getDatabase(app)
-export const storage = getStorage(app)
-export default app
+if (typeof window === 'undefined') {
+  // Server: provide proxies that throw helpful errors if used.
+  const missing = () => {
+    throw new Error('[Firebase Client] Browser Firebase SDK is not available on the server. Guard usage with `if (typeof window !== \"undefined\")`.')
+  }
+  auth = new Proxy({}, { get: () => missing })
+  db = new Proxy({}, { get: () => missing })
+  storage = new Proxy({}, { get: () => missing })
+  firebaseApp = null
+} else {
+  // Browser: only initialize if an API key is configured. If it's missing, export
+  // proxies that throw a clear error so the UI can show a friendly message.
+  if (!firebaseConfig.apiKey) {
+    const missing = () => {
+      throw new Error('[Firebase Client] NEXT_PUBLIC_FIREBASE_API_KEY is missing. Set your Firebase web config in Vercel or .env.local')
+    }
+    auth = new Proxy({}, { get: () => missing })
+    db = new Proxy({}, { get: () => missing })
+    storage = new Proxy({}, { get: () => missing })
+    firebaseApp = null
+  } else {
+    firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+    auth = getAuth(firebaseApp)
+    db = getDatabase(firebaseApp)
+    storage = getStorage(firebaseApp)
+  }
+}
