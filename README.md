@@ -30,6 +30,8 @@ yarn install
 pnpm install
 ```
 
+> **📌 Deploying to Vercel?** See [TROUBLESHOOTING_VERCEL.md](./TROUBLESHOOTING_VERCEL.md) if your pushes aren't triggering deployments or if you're seeing deployment issues.
+
 ### 2. Configure Firebase
 Copy the environment template:
 ```bash

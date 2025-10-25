@@ -1,5 +1,7 @@
 # Vercel Deployment Guide - InkMatching Web
 
+> **🚨 Troubleshooting**: If your git pushes aren't showing up on Vercel or you're experiencing deployment issues, see [TROUBLESHOOTING_VERCEL.md](./TROUBLESHOOTING_VERCEL.md) for comprehensive diagnostics and solutions.
+
 ## Current Build Error Fix
 
 ### Error: `Can't determine Firebase Database URL`
