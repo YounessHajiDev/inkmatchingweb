@@ -2,6 +2,11 @@
 
 A Next.js web application for discovering tattoo artists, connecting via real-time chat, and managing leads.
 
+> **🚨 Vercel Deployment Issues?**  
+> If your git pushes aren't triggering Vercel deployments, see:
+> - **Quick fix**: [VERCEL_QUICK_FIX.md](./VERCEL_QUICK_FIX.md) ← Start here!
+> - **Full guide**: [TROUBLESHOOTING_VERCEL.md](./TROUBLESHOOTING_VERCEL.md)
+
 ## Tech Stack
 
 - **Next.js 14** (App Router)
@@ -29,6 +34,8 @@ yarn install
 # or
 pnpm install
 ```
+
+> **📌 Deploying to Vercel?** See [TROUBLESHOOTING_VERCEL.md](./TROUBLESHOOTING_VERCEL.md) if your pushes aren't triggering deployments or if you're seeing deployment issues.
 
 ### 2. Configure Firebase
 Copy the environment template:
