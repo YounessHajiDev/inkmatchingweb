@@ -38,7 +38,7 @@ git push origin main
 Go to: Vercel Dashboard → Your Project → Settings → Environment Variables
 
 **Required variables** (see `.env.local.example` for full list):
-- `NEXT_PUBLIC_FIREBASE_DATABASE_URL` ← Most commonly missing!
+- `NEXT_PUBLIC_FIREBASE_DATABASE_URL` (Most commonly missing!)
 - All other `NEXT_PUBLIC_FIREBASE_*` variables
 - `FIREBASE_SERVICE_ACCOUNT_KEY` (must be single-line JSON)
 - Stripe keys (`STRIPE_SECRET_KEY`, etc.)
@@ -105,12 +105,21 @@ See [TROUBLESHOOTING_VERCEL.md](./TROUBLESHOOTING_VERCEL.md) for detailed diagno
 
 ---
 
-## 🎯 One-Line Test Command
+## 🎯 Quick Test Commands
 
-Run this to test if webhook is working:
+Run these to test if webhook is working:
 ```bash
-git commit --allow-empty -m "test: verify Vercel webhook" && git push origin main && echo "✓ Pushed! Check Vercel Deployments in 30 seconds"
+# Step 1: Create and commit an empty commit
+git commit --allow-empty -m "test: verify Vercel webhook"
+
+# Step 2: Push to trigger deployment
+git push origin main
+
+# Step 3: Wait 30 seconds and check Vercel Deployments page
+echo "✓ Pushed! Check Vercel Deployments in 30 seconds"
 ```
+
+**Note**: Breaking these into separate steps makes it easier to identify which step fails if there's an issue.
 
 ---
 
