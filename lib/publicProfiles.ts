@@ -1,4 +1,4 @@
-import { ref, get, set } from 'firebase/database'
+import { ref, get, set, update } from 'firebase/database'
 import { db } from './firebaseClient'
 import { publicProfileSchema } from './schemas'
 import type { PublicProfile, ArtistWithProfile } from '@/types'
@@ -28,7 +28,6 @@ export async function fetchArtistsOnce(limit: number = 100): Promise<ArtistWithP
     if (data.role === 'artist' && data.isPublic !== false) {
       const { lat, lon } = getLatLon(data)
       artists.push({
-        uid,
         ...data,
         normalizedStyles: normalizeStyles(data.styles),
         lat,
@@ -59,7 +58,8 @@ export async function saveMyPublicProfile(
     Object.entries({ ...input, uid }).filter(([_, v]) => v !== undefined)
   )
   
-  await set(profileRef, cleanedInput)
+  // Use update() to merge with existing data instead of set() which overwrites
+  await update(profileRef, cleanedInput)
 }
 
 export async function deferMyProfileVisibility(uid: string): Promise<void> {
