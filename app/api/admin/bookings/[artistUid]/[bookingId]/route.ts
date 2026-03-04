@@ -21,10 +21,14 @@ export async function PATCH(req: Request, { params }: { params: { artistUid: str
   try {
     const body = await req.json()
     await adminDb.ref(`bookingsByArtist/${artistUid}/${bookingId}`).update(body)
-    // mirror to client index if present
+    // mirror to client index if present — read clientUid from existing booking data
     try {
-      const clientRef = adminDb.ref(`bookingsByClient/${body.clientUid || ''}/${bookingId}`)
-      if (body.clientUid) await clientRef.update(body)
+      const existingSnap = await adminDb.ref(`bookingsByArtist/${artistUid}/${bookingId}`).get()
+      const existingData = existingSnap.exists() ? existingSnap.val() : null
+      const clientUid = body.clientUid || existingData?.clientUid
+      if (clientUid) {
+        await adminDb.ref(`bookingsByClient/${clientUid}/${bookingId}`).update(body)
+      }
     } catch (e) { /* ignore */ }
     try {
       const auth = req.headers.get('authorization')
