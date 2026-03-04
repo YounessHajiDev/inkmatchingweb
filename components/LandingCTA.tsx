@@ -27,7 +27,7 @@ export default function LandingCTA() {
 
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <button
-                onClick={() => router.push('/register')}
+                onClick={() => router.push('/signup/role')}
                 className="btn btn-primary btn-lg shadow-glow text-base"
               >
                 {t('landing_cta_button')}

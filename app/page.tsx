@@ -5,7 +5,6 @@ import LandingHowItWorks from '@/components/LandingHowItWorks'
 import LandingFeatures from '@/components/LandingFeatures'
 import LandingTestimonials from '@/components/LandingTestimonials'
 import LandingCTA from '@/components/LandingCTA'
-import Footer from '@/components/Footer'
 
 export default function LandingPage() {
   return (
@@ -15,7 +14,6 @@ export default function LandingPage() {
       <LandingFeatures />
       <LandingTestimonials />
       <LandingCTA />
-      <Footer />
     </main>
   )
 }
