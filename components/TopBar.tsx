@@ -64,7 +64,7 @@ export default function TopBar() {
       <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-8">
           <Link href={homeLink} className="group flex items-end gap-3">
           <div className="relative">
-            <span className="text-[1.8rem] font-semibold tracking-tight text-white transition-colors group-hover:text-ink-accent">InkMatch</span>
+            <span className="text-[1.8rem] font-semibold tracking-tight text-white transition-colors group-hover:text-ink-accent">InkMatching</span>
             <span className="absolute -top-2 -right-4 text-sm text-ink-accent">✶</span>
           </div>
           <span className="hidden text-[0.6rem] font-semibold uppercase tracking-[0.5em] text-ink-text-muted sm:inline-flex">

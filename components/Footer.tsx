@@ -11,7 +11,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-lg font-semibold text-white">InkMatch</div>
+            <div className="text-lg font-semibold text-white">InkMatching</div>
             <div className="text-sm text-ink-text-muted">{t('tattoo_market')}</div>
           </div>
 
@@ -34,7 +34,7 @@ export default function Footer() {
 
         <div className="mt-6 border-t border-white/5 pt-4 text-sm text-ink-text-muted">
           <div className="flex items-center justify-between">
-            <div>© {new Date().getFullYear()} InkMatch</div>
+            <div>© {new Date().getFullYear()} InkMatching</div>
             <div>{t('copyright_notice') || 'All rights reserved.'}</div>
           </div>
         </div>
