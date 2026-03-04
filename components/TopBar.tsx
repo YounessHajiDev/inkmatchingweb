@@ -62,13 +62,13 @@ export default function TopBar() {
     <header className="relative z-30 border-b border-white/5 bg-white/[0.02] backdrop-blur-lg">
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-transparent" />
       <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-8">
-        <Link href={homeLink} className="group flex items-end gap-3">
+          <Link href={homeLink} className="group flex items-end gap-3">
           <div className="relative">
             <span className="text-[1.8rem] font-semibold tracking-tight text-white transition-colors group-hover:text-ink-accent">InkMatch</span>
             <span className="absolute -top-2 -right-4 text-sm text-ink-accent">✶</span>
           </div>
           <span className="hidden text-[0.6rem] font-semibold uppercase tracking-[0.5em] text-ink-text-muted sm:inline-flex">
-            Tattoo Market
+            {t('tattoo_market')}
           </span>
         </Link>
 
@@ -79,15 +79,15 @@ export default function TopBar() {
               // Show My Public Profile for artists
               <Link href="/artist/setup" className="flex items-center gap-2 hover:text-white transition-colors">
                 <span className={`h-3 w-3 rounded-full ${isPublic ? 'bg-green-400' : 'bg-red-500'} inline-block`} aria-hidden />
-                <span>{t('my_public_profile')}</span>
+                <span>{t('my_public_profile') || 'My Public Profile'}</span>
               </Link>
             ) : (
               <>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  {t('pricing')}
+                  {t('pricing') || 'Pricing'}
                 </Link>
                 <Link href="/discover" className="hover:text-white transition-colors">
-                  {t('discover')}
+                  {t('discover') || 'Discover'}
                 </Link>
               </>
             )}
@@ -97,7 +97,7 @@ export default function TopBar() {
                 value={locale}
                 onChange={(e) => setLocale(e.target.value as any)}
                 className="bg-transparent text-sm text-ink-text-muted border border-white/5 rounded-md px-2 py-1"
-                aria-label={t('language')}
+                aria-label={t('language') || 'Language'}
               >
                 <option value="en">EN</option>
                 <option value="fr">FR</option>
@@ -127,14 +127,14 @@ export default function TopBar() {
                   className="pill hover:border-ink-accent/60 hover:text-white"
                 >
                   <UserPlusIcon className="h-5 w-5 text-ink-accent" />
-                  <span className="hidden text-sm font-semibold text-white sm:block">Join us</span>
+                  <span className="hidden text-sm font-semibold text-white sm:block">{t('join_us')}</span>
                 </Link>
                 <Link
                   href="/login"
                   className="btn btn-primary"
                 >
                   <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                  <span className="hidden sm:inline">Sign In</span>
+                  <span className="hidden sm:inline">{t('sign_in')}</span>
                 </Link>
               </>
             )}

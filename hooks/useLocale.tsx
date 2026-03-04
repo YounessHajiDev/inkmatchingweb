@@ -26,5 +26,14 @@ export function useLocale() {
 
   const t = (key: string) => TRANSLATIONS[locale][key] ?? TRANSLATIONS[DEFAULT_LOCALE][key] ?? key
 
-  return { locale, setLocale, t }
+  const tFormat = (key: string, params: Record<string, string | number> = {}) => {
+    let str = t(key)
+    Object.keys(params).forEach((k) => {
+      const v = String(params[k])
+      str = str.split(`{${k}}`).join(v)
+    })
+    return str
+  }
+
+  return { locale, setLocale, t, tFormat }
 }

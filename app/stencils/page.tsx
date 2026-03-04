@@ -8,6 +8,7 @@ import { fetchArtistsOnce, getPublicProfile } from '@/lib/publicProfiles'
 import { ensureOneToOneThread, sendImageAttachment, subscribeToReceivedStencils } from '@/lib/realtime'
 import Image from 'next/image'
 import { XMarkIcon, SparklesIcon, ArrowUpTrayIcon, PaperAirplaneIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { useLocale } from '@/hooks/useLocale'
 import type { ArtistWithProfile } from '@/types'
 
 interface ReceivedStencil {
@@ -67,16 +68,18 @@ export default function StencilsPage() {
     }
   }, [showSendModal, artists.length])
 
-  if (loading) return <div className="p-8 text-gray-400">Loading…</div>
-  if (!user) return <div className="p-8 text-gray-400">Please login to view stencils.</div>
+  const { t } = useLocale()
+
+  if (loading) return <div className="p-8 text-gray-400">{t('loading')}</div>
+  if (!user) return <div className="p-8 text-gray-400">{t('please_login')}</div>
 
   // Artists see received stencils from clients
   if (userRole === 'artist') {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <div className="space-y-3">
-          <h1 className="text-3xl font-bold text-white">Received Stencils</h1>
-          <p className="text-sm text-ink-text-muted">Stencils sent to you by clients in conversations</p>
+          <h1 className="text-3xl font-bold text-white">{t('stencils_received_title') || 'Received Stencils'}</h1>
+          <p className="text-sm text-ink-text-muted">{t('stencils_received_description') || 'Stencils sent to you by clients in conversations'}</p>
         </div>
 
         {receivedStencils.length === 0 ? (

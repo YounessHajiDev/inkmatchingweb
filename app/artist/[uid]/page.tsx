@@ -79,7 +79,7 @@ export default function ArtistProfilePage() {
     if (!user) { router.push('/login'); return }
     if (user.uid === uid) return
     if (myProfile && myProfile.role !== 'client' && myProfile.role !== 'admin') {
-      alert('Only clients can start conversations with artists.')
+      alert(t('only_clients_can_start_conversations') || 'Only clients can start conversations with artists.')
       return
     }
     setMessaging(true)
@@ -92,11 +92,11 @@ export default function ArtistProfilePage() {
     } finally { setMessaging(false) }
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-400">Loading profile...</div></div>
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-400">{t('loading_profile') || 'Loading profile...'}</div></div>
   if (!profile) return (
     <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-      <h1 className="text-2xl font-bold mb-4">Profile Not Found</h1>
-      <p className="text-gray-400">This artist profile does not exist</p>
+      <h1 className="text-2xl font-bold mb-4">{t('profile_not_found') || 'Profile Not Found'}</h1>
+      <p className="text-gray-400">{t('this_artist_profile_does_not_exist') || 'This artist profile does not exist'}</p>
     </div>
   )
 
@@ -120,13 +120,13 @@ export default function ArtistProfilePage() {
           </div>
           {stylesText && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-400 uppercase mb-2">Styles</h2>
+              <h2 className="text-sm font-semibold text-gray-400 uppercase mb-2">{t('styles') || 'Styles'}</h2>
               <p className="text-white">{stylesText}</p>
             </div>
           )}
           {typeof profile.rating === 'number' && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-400 uppercase mb-2">Rating</h2>
+              <h2 className="text-sm font-semibold text-gray-400 uppercase mb-2">{t('rating') || 'Rating'}</h2>
               <div className="flex items-center space-x-2">
                 <span className="text-yellow-400 text-2xl">★</span>
                 <span className="text-xl text-white">{profile.rating.toFixed(1)}</span>
@@ -162,8 +162,8 @@ export default function ArtistProfilePage() {
           </div>
           {isClient && user?.uid !== uid && (
             <div className="mt-8 space-y-4 border-t border-ink-muted/60 pt-6">
-              <h2 className="text-xl font-semibold text-white">Request an Appointment</h2>
-              <p className="text-sm text-gray-400">Share a few details so the artist can confirm availability. All scheduling stays inside InkMatching.</p>
+              <h2 className="text-xl font-semibold text-white">{t('request_appointment') || 'Request an Appointment'}</h2>
+              <p className="text-sm text-gray-400">{t('request_appointment_description') || 'Share a few details so the artist can confirm availability. All scheduling stays inside InkMatching.'}</p>
               {bookingFeedback && <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-200">{bookingFeedback}</div>}
               {bookingError && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{bookingError}</div>}
               <form
@@ -183,18 +183,18 @@ export default function ArtistProfilePage() {
                       budget: bookingForm.budget ? Number(bookingForm.budget) : undefined,
                       depositAmount: bookingForm.depositAmount ? Number(bookingForm.depositAmount) : undefined,
                     })
-                    setBookingFeedback('Request sent! The artist will reply inside InkMatching.')
+                    setBookingFeedback(t('request_sent') || 'Request sent! The artist will reply inside InkMatching.')
                     setBookingForm({ scheduledFor: '', scheduledTime: '', style: '', note: '', budget: '', depositAmount: '' })
                   } catch (error: any) {
                     console.error(error)
-                    setBookingError(error?.message ?? 'Unable to submit booking request right now.')
+                    setBookingError(error?.message ?? (t('request_send_failure') || 'Unable to submit booking request right now.'))
                   } finally {
                     setBookingBusy(false)
                   }
                 }}
               >
                 <div>
-                  <label className="label">Preferred Date</label>
+                  <label className="label">{t('preferred_date') || 'Preferred Date'}</label>
                   <input
                     type="date"
                     className="input"
@@ -203,7 +203,7 @@ export default function ArtistProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="label">Preferred Time</label>
+                  <label className="label">{t('preferred_time') || 'Preferred Time'}</label>
                   <input
                     type="time"
                     className="input"
@@ -212,16 +212,16 @@ export default function ArtistProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="label">Style or Placement</label>
+                  <label className="label">{t('style_or_placement') || 'Style or Placement'}</label>
                   <input
                     className="input"
-                    placeholder="Blackwork, forearm, etc."
+                    placeholder={t('style_or_placement') || 'Blackwork, forearm, etc.'}
                     value={bookingForm.style}
                     onChange={(e) => setBookingForm((prev) => ({ ...prev, style: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="label">Budget (USD)</label>
+                  <label className="label">{t('budget_usd') || 'Budget (USD)'}</label>
                   <input
                     type="number"
                     min="0"
@@ -231,7 +231,7 @@ export default function ArtistProfilePage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="label">Additional Notes</label>
+                  <label className="label">{t('additional_notes') || 'Additional Notes'}</label>
                   <textarea
                     className="input"
                     rows={3}
@@ -240,7 +240,7 @@ export default function ArtistProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="label">Deposit Amount (optional)</label>
+                  <label className="label">{t('deposit_amount_optional') || 'Deposit Amount (optional)'}</label>
                   <input
                     type="number"
                     min="0"
@@ -251,7 +251,7 @@ export default function ArtistProfilePage() {
                 </div>
                 <div className="sm:col-span-2">
                   <button disabled={bookingBusy} className="btn-primary w-full py-2.5">
-                    {bookingBusy ? 'Sending request…' : 'Submit booking request'}
+                    {bookingBusy ? (t('sending_request') || 'Sending request…') : (t('submit_booking_request') || 'Submit booking request')}
                   </button>
                 </div>
               </form>
