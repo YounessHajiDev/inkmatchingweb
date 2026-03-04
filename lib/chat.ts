@@ -49,19 +49,12 @@ export async function sendImageAttachment(
   const messageRef = push(messagesRef)
   const messageId = messageRef.key ?? `img_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
 
-  const attachment: Record<string, unknown> = {
-    id: `att_${Math.random().toString(36).slice(2, 10)}`,
-    url,
-  }
-  if (dimensions?.width) attachment.width = dimensions.width
-  if (dimensions?.height) attachment.height = dimensions.height
-
   const payload = {
     id: messageId,
     senderId,
     createdAt: serverTimestamp(),
     kind: 'image',
-    attachments: [attachment],
+    attachments: [url],
   }
   await set(messageRef, payload)
 
@@ -150,7 +143,7 @@ export function subscribeToReceivedStencils(
             const profileParsed = senderProfile ? publicProfileSchema.safeParse(senderProfile) : null
             const senderName = profileParsed?.success ? profileParsed.data.displayName : 'Client'
             allStencils.push({
-              url: message.attachments[0].url,
+              url: message.attachments[0],
               senderId: message.senderId,
               senderName: senderName || 'Client',
               threadId,

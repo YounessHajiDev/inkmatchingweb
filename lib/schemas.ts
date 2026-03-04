@@ -58,20 +58,13 @@ export const threadSchema = z.object({
 
 export const messageKindSchema = z.enum(['text', 'image', 'location', 'system'])
 
-const attachmentSchema = z.object({
-  id: z.string().optional(),
-  url: z.string(),
-  width: z.number().optional(),
-  height: z.number().optional(),
-})
-
 export const messageSchema = z.object({
   id: z.string().default(''),
   senderId: z.string().default(''),
   createdAt: firebaseTimestamp,
   kind: messageKindSchema.default('text'),
   text: z.string().optional(),
-  attachments: z.array(attachmentSchema).optional(),
+  attachments: z.array(z.string()).optional(),
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),

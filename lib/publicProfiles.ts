@@ -28,7 +28,6 @@ export async function fetchArtistsOnce(limit: number = 100): Promise<ArtistWithP
     if (data.role === 'artist' && data.isPublic !== false) {
       const { lat, lon } = getLatLon(data)
       artists.push({
-        uid,
         ...data,
         normalizedStyles: normalizeStyles(data.styles),
         lat,
