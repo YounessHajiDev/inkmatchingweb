@@ -46,7 +46,7 @@ export async function updateSubscription(
   data: Partial<SubscriptionData>
 ): Promise<void> {
   const profileRef = ref(db, `publicProfiles/${uid}`)
-  const updates: any = {}
+  const updates: Record<string, string | number | undefined> = {}
   
   if (data.tier !== undefined) updates.subscriptionTier = data.tier
   if (data.status !== undefined) updates.subscriptionStatus = data.status

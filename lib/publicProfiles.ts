@@ -1,5 +1,6 @@
 import { ref, get, set } from 'firebase/database'
 import { db } from './firebaseClient'
+import { publicProfileSchema } from './schemas'
 import type { PublicProfile, ArtistWithProfile } from '@/types'
 
 function normalizeStyles(styles: string | string[] | undefined): string {
@@ -20,13 +21,16 @@ export async function fetchArtistsOnce(limit: number = 100): Promise<ArtistWithP
   if (!snapshot.exists()) return []
   const profiles = snapshot.val()
   const artists: ArtistWithProfile[] = []
-  Object.entries(profiles).forEach(([uid, data]: [string, any]) => {
+  Object.entries(profiles).forEach(([uid, raw]) => {
+    const parsed = publicProfileSchema.safeParse({ ...raw as Record<string, unknown>, uid })
+    if (!parsed.success) return
+    const data = parsed.data as PublicProfile
     if (data.role === 'artist' && data.isPublic !== false) {
-      const { lat, lon } = getLatLon(data as PublicProfile)
+      const { lat, lon } = getLatLon(data)
       artists.push({
         uid,
-        ...(data as any),
-        normalizedStyles: normalizeStyles((data as any).styles),
+        ...data,
+        normalizedStyles: normalizeStyles(data.styles),
         lat,
         lon,
       })
@@ -39,7 +43,9 @@ export async function getPublicProfile(uid: string): Promise<PublicProfile | nul
   const profileRef = ref(db, `publicProfiles/${uid}`)
   const snapshot = await get(profileRef)
   if (!snapshot.exists()) return null
-  return { uid, ...(snapshot.val() as any) }
+  const parsed = publicProfileSchema.safeParse({ ...snapshot.val() as Record<string, unknown>, uid })
+  if (!parsed.success) return null
+  return parsed.data as PublicProfile
 }
 
 export async function saveMyPublicProfile(
@@ -60,6 +66,8 @@ export async function deferMyProfileVisibility(uid: string): Promise<void> {
   const profileRef = ref(db, `publicProfiles/${uid}`)
   const snapshot = await get(profileRef)
   if (snapshot.exists()) {
-    await set(profileRef, { ...(snapshot.val() as any), isPublic: false })
+    const parsed = publicProfileSchema.safeParse(snapshot.val())
+    const existing = parsed.success ? parsed.data : snapshot.val()
+    await set(profileRef, { ...existing, isPublic: false })
   }
 }

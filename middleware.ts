@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
 
   // If host is admin subdomain but path isn't under /admin, rewrite to the admin path so the
   // app can continue using /admin routes internally (keeps routing consistent).
-  if (host.includes(ADMIN_HOST) && !pathname.startsWith('/admin')) {
+  if (host.includes(ADMIN_HOST) && !pathname.startsWith('/admin') && !pathname.startsWith('/api/')) {
     const target = new URL(req.url)
     target.pathname = `/admin${pathname}`
     return NextResponse.rewrite(target)

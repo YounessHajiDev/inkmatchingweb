@@ -173,6 +173,16 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     hero_stat_2_label: 'total artists',
     hero_stat_3_value: '63',
     hero_stat_3_label: 'hours active',
+
+    // Navigation tabs
+    map_label: 'Map',
+    leads_label: 'Leads',
+    calendar_label: 'Calendar',
+    stencils_label: 'Stencils',
+    aftercare_label: 'Aftercare',
+    chat_label: 'Chat',
+    admin_label: 'Admin',
+    my_public_profile: 'My Public Profile',
   },
   fr: {
     // General
@@ -340,6 +350,16 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     hero_stat_2_label: "artistes au total",
     hero_stat_3_value: '63',
     hero_stat_3_label: 'heures actives',
+
+    // Navigation tabs
+    map_label: 'Carte',
+    leads_label: 'Leads',
+    calendar_label: 'Calendrier',
+    stencils_label: 'Pochoirs',
+    aftercare_label: 'Après-soin',
+    chat_label: 'Chat',
+    admin_label: 'Admin',
+    my_public_profile: 'Mon profil public',
   }
 }
 

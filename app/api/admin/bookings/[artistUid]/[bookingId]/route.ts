@@ -42,8 +42,14 @@ export async function DELETE(req: Request, { params }: { params: { artistUid: st
   if (!(await verifyAdmin(req))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { artistUid, bookingId } = params
   try {
+    const bookingSnap = await adminDb.ref(`bookingsByArtist/${artistUid}/${bookingId}`).get()
+    const bookingData = bookingSnap.exists() ? bookingSnap.val() : null
     await adminDb.ref(`bookingsByArtist/${artistUid}/${bookingId}`).remove()
-    try { await adminDb.ref(`bookingsByClient`).child(artistUid).child(bookingId).remove() } catch (e) { /* ignore */ }
+    try {
+      if (bookingData?.clientUid) {
+        await adminDb.ref(`bookingsByClient/${bookingData.clientUid}/${bookingId}`).remove()
+      }
+    } catch (e) { /* ignore */ }
     try {
       const auth = req.headers.get('authorization')
       const decoded = auth ? await adminAuth.verifyIdToken(auth.split(' ')[1]) : null

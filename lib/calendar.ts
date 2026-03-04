@@ -1,5 +1,6 @@
 import { db } from '@/lib/firebaseClient'
 import { ref, push, set, get, remove } from 'firebase/database'
+import { calendarEventSchema } from './schemas'
 
 export type CalendarEvent = {
   id: string
@@ -52,7 +53,11 @@ function appointmentToLegacy(apt: CalendarEvent): LegacyCalendarEvent {
 export async function listEvents(uid: string): Promise<LegacyCalendarEvent[]> {
   const snap = await get(ref(db, `appointmentsByArtist/${uid}`))
   if (!snap.exists()) return []
-  const appointments: CalendarEvent[] = Object.entries(snap.val()).map(([id, v]: [string, any]) => ({ id, ...(v as any) }))
+  const appointments: CalendarEvent[] = Object.entries(snap.val()).map(([id, raw]) => {
+    const parsed = calendarEventSchema.safeParse(raw)
+    if (!parsed.success) return { id, title: '', startsAt: 0, endsAt: 0 }
+    return { ...parsed.data, id }
+  })
   const legacy = appointments.map(appointmentToLegacy)
   legacy.sort((a, b) => a.dateISO.localeCompare(b.dateISO))
   return legacy

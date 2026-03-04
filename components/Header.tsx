@@ -22,11 +22,11 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <Link href="/" className="text-white hover:text-ink-accent font-semibold">{t('discover_label')}</Link>
-            <Link href="/map" className="text-white hover:text-ink-accent">{t('map_label') ?? 'Map'}</Link>
-            <Link href="/leads" className="text-white hover:text-ink-accent">{t('leads_label') ?? 'Leads'}</Link>
-            <Link href="/calendar" className="text-white hover:text-ink-accent">{t('calendar_label') ?? 'Calendar'}</Link>
-            <Link href="/stencils" className="text-white hover:text-ink-accent">{t('stencils_label') ?? 'Stencils'}</Link>
-            <Link href="/aftercare" className="text-white hover:text-ink-accent">{t('aftercare_label') ?? 'Aftercare'}</Link>
+            <Link href="/map" className="text-white hover:text-ink-accent">{t('map_label')}</Link>
+            <Link href="/leads" className="text-white hover:text-ink-accent">{t('leads_label')}</Link>
+            <Link href="/calendar" className="text-white hover:text-ink-accent">{t('calendar_label')}</Link>
+            <Link href="/stencils" className="text-white hover:text-ink-accent">{t('stencils_label')}</Link>
+            <Link href="/aftercare" className="text-white hover:text-ink-accent">{t('aftercare_label')}</Link>
           </div>
           <div className="flex items-center space-x-4">
             {!loading && (

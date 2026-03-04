@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
   try {
     // Try to reuse existing stripe customer saved in publicProfiles
     const profileSnap = await adminDb.ref(`publicProfiles/${decodedUid}`).get()
-    const profile = profileSnap.exists() ? profileSnap.val() as any : {}
-    let customerId = profile?.stripeCustomerId
+    const profile = profileSnap.exists() ? (profileSnap.val() as Record<string, unknown>) : {} as Record<string, unknown>
+    let customerId = profile?.stripeCustomerId as string | undefined
 
     if (!customerId) {
       // Create a new Stripe customer and store it
       const customer = await stripe.customers.create({
         metadata: { uid: decodedUid, tier },
-        email: profile?.email || undefined,
+        email: (profile?.email as string) || undefined,
       })
       customerId = customer.id
       await adminDb.ref(`publicProfiles/${decodedUid}`).update({ stripeCustomerId: customerId })
@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
       mode: 'subscription',
       customer: customerId,
       payment_method_types: ['card'],
-      automatic_payment_methods: { enabled: true },
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         metadata: { uid: decodedUid, tier },
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
       success_url: successUrl,
       cancel_url: cancelUrl,
     }
-    const session = await stripe.checkout.sessions.create(params as any)
+    const session = await stripe.checkout.sessions.create(params as Stripe.Checkout.SessionCreateParams)
 
     return NextResponse.json({ url: session.url, id: session.id })
   } catch (e) {

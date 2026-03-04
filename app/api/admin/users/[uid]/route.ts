@@ -41,9 +41,11 @@ export async function PATCH(req: Request, { params }: { params: { uid: string } 
   try {
     const body = await req.json()
     if (body.setAdmin === true) {
-      await adminAuth.setCustomUserClaims(uid, { admin: true })
+      const existing = (await adminAuth.getUser(uid)).customClaims || {}
+      await adminAuth.setCustomUserClaims(uid, { ...existing, admin: true })
     } else if (body.setAdmin === false) {
-      await adminAuth.setCustomUserClaims(uid, { admin: false })
+      const existing = (await adminAuth.getUser(uid)).customClaims || {}
+      await adminAuth.setCustomUserClaims(uid, { ...existing, admin: false })
     }
     try {
       const auth = req.headers.get('authorization')

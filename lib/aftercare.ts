@@ -1,5 +1,6 @@
 import { ref, push, set, get, onValue, off, update } from 'firebase/database'
 import { db } from './firebaseClient'
+import { aftercareSchema, aftercareIndexSchema } from './schemas'
 import type { Aftercare, AftercareStatus } from '@/types'
 
 /**
@@ -61,10 +62,11 @@ export async function fetchClientAftercares(clientUid: string): Promise<Aftercar
   if (!snapshot.exists()) return []
   
   const data = snapshot.val()
-  const aftercares: Aftercare[] = Object.entries(data).map(([id, ac]: [string, any]) => ({
-    id,
-    ...(ac as any),
-  }))
+  const aftercares: Aftercare[] = Object.entries(data).map(([id, raw]) => {
+    const parsed = aftercareSchema.safeParse(raw)
+    if (!parsed.success) return { id, artistUid: '', artistName: '', clientUid: '', clientName: '', createdAt: 0, updatedAt: 0, status: 'active' as const, instructions: [] }
+    return { ...parsed.data, id }
+  })
   
   return aftercares.sort((a, b) => b.createdAt - a.createdAt)
 }
@@ -80,10 +82,13 @@ export async function fetchArtistAftercares(artistUid: string): Promise<Aftercar
   const aftercares: Aftercare[] = []
   
   for (const [aftercareId, indexData] of Object.entries(indices)) {
-    const clientUid = (indexData as any).clientUid
+    const parsed = aftercareIndexSchema.safeParse(indexData)
+    if (!parsed.success) continue
+    const clientUid = parsed.data.clientUid
     const acSnap = await get(ref(db, `aftercareByClient/${clientUid}/${aftercareId}`))
     if (acSnap.exists()) {
-      aftercares.push({ id: aftercareId, ...(acSnap.val() as any) })
+      const acParsed = aftercareSchema.safeParse(acSnap.val())
+      if (acParsed.success) aftercares.push({ ...acParsed.data, id: aftercareId })
     }
   }
   
@@ -96,7 +101,9 @@ export async function fetchArtistAftercares(artistUid: string): Promise<Aftercar
 export async function fetchAftercare(clientUid: string, aftercareId: string): Promise<Aftercare | null> {
   const snapshot = await get(ref(db, `aftercareByClient/${clientUid}/${aftercareId}`))
   if (!snapshot.exists()) return null
-  return { id: aftercareId, ...(snapshot.val() as any) }
+  const parsed = aftercareSchema.safeParse(snapshot.val())
+  if (!parsed.success) return null
+  return { ...parsed.data, id: aftercareId }
 }
 
 /**
@@ -115,8 +122,10 @@ export async function updateAftercareStatus(
   // Also update artist index
   const acSnap = await get(ref(db, `aftercareByClient/${clientUid}/${aftercareId}`))
   if (acSnap.exists()) {
-    const ac = acSnap.val() as any
-    await update(ref(db, `aftercareByArtist/${ac.artistUid}/${aftercareId}`), { status })
+    const parsed = aftercareSchema.safeParse(acSnap.val())
+    if (parsed.success) {
+      await update(ref(db, `aftercareByArtist/${parsed.data.artistUid}/${aftercareId}`), { status })
+    }
   }
 }
 
@@ -148,10 +157,11 @@ export function subscribeToClientAftercares(
       return
     }
     const data = snapshot.val()
-    const aftercares: Aftercare[] = Object.entries(data).map(([id, ac]: [string, any]) => ({
-      id,
-      ...(ac as any),
-    }))
+    const aftercares: Aftercare[] = Object.entries(data).map(([id, raw]) => {
+      const parsed = aftercareSchema.safeParse(raw)
+      if (!parsed.success) return { id, artistUid: '', artistName: '', clientUid: '', clientName: '', createdAt: 0, updatedAt: 0, status: 'active' as const, instructions: [] }
+      return { ...parsed.data, id }
+    })
     aftercares.sort((a, b) => b.createdAt - a.createdAt)
     callback(aftercares)
   })
